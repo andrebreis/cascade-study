@@ -1,13 +1,16 @@
 import math
 import random
+import time
 
 
 class CascadeTemplate(object):
 
-    def __init__(self, correct_party, key):
+    def __init__(self, correct_party, key, stats):
         self.correct_party = correct_party
         self.key = key
         self.num_iterations = 0
+        self.stats = stats
+        self.id = str(time.time())
 
     def calculate_parity(self, indexes):
         parity = 0
@@ -52,10 +55,14 @@ class CascadeTemplate(object):
     def run_algorithm(self):
         iterations = []
 
+        self.stats.initialize_run(self.id, self.correct_party.key.bin, self.key.bin, self.estimate_error())
+
         for iter_num in range(0, self.num_iterations):
             iterations.append(self.get_iteration_blocks(iter_num))
             parities = self.calculate_parities(iterations[iter_num])
+
             correct_parities = self.correct_party.calculate_parities(iterations[iter_num])
+            self.stats.register_channel_use(self.id, {'len': len(correct_parities)})
 
             for i in range(0, len(correct_parities)):
                 if parities[i] != correct_parities[i]:
@@ -69,6 +76,8 @@ class CascadeTemplate(object):
                         if corrected_index is not None:
                             self.key.invert(corrected_index)
 
+        self.stats.end_run(self.id, self.key.bin)
+
     def _binary(self, block):
         """
         Finds the index of an odd error in the given block
@@ -77,6 +86,7 @@ class CascadeTemplate(object):
         """
         first_half_size = math.ceil(len(block) / 2)
         correct_first_half_par = self.correct_party.calculate_parity(block[:first_half_size])
+        self.stats.register_channel_use(self.id, {'len': 1})
 
         first_half_par = self.calculate_parity(block[:first_half_size])
 
