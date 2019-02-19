@@ -54,29 +54,33 @@ class CascadeTemplate(object):
 
     def run_algorithm(self):
         iterations = []
+        parities = []
+        correct_parities = []
 
         self.stats.initialize_run(self.id, self.correct_party.key.bin, self.key.bin, self.estimate_error())
 
         for iter_num in range(0, self.num_iterations):
             iterations.append(self.get_iteration_blocks(iter_num))
-            parities = self.calculate_parities(iterations[iter_num])
+            parities.append(self.calculate_parities(iterations[iter_num]))
+            correct_parities.append(self.correct_party.calculate_parities(iterations[iter_num]))
 
-            correct_parities = self.correct_party.calculate_parities(iterations[iter_num])
-            # self.stats.register_channel_use(self.id,)
-            self.stats.start_iteration(self.id, {'len': len(correct_parities)})
+            self.stats.start_iteration(self.id, {'len': len(correct_parities[iter_num])})
 
-            for i in range(0, len(correct_parities)):
-                if parities[i] != correct_parities[i]:
-                    self.stats.start_block(self.id)
-                    corrected_index = iterations[iter_num][i][0]
-                    for j in range(0, iter_num + 1):
-                        correcting_block = self._get_block_containing_index(iterations[iter_num - j],
-                                                                            corrected_index)
-                        if correcting_block is None:
-                            continue
+            for i in range(0, len(correct_parities[iter_num])):
+                corrected_index = iterations[iter_num][i][0]
+                for j in range(0, iter_num + 1):
+                    correcting_block = self._get_block_containing_index(iterations[iter_num - j],
+                                                                        corrected_index)
+                    if correcting_block is None:
+                        continue
+                    if parities[iter_num - j][correcting_block] != correct_parities[iter_num - j][correcting_block]:
+                        self.stats.start_block(self.id)
                         corrected_index = self._binary(iterations[iter_num - j][correcting_block])
                         if corrected_index is not None:
                             self.key.invert(corrected_index)
+                            for i in range(0, len(parities)):
+                                corrected_block = self._get_block_containing_index(iterations[i], corrected_index)
+                                parities[i][corrected_block] = (parities[i][corrected_block] + 1) % 2
 
         self.stats.end_run(self.id, self.key.bin)
 
