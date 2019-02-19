@@ -62,10 +62,12 @@ class CascadeTemplate(object):
             parities = self.calculate_parities(iterations[iter_num])
 
             correct_parities = self.correct_party.calculate_parities(iterations[iter_num])
-            self.stats.register_channel_use(self.id, {'len': len(correct_parities)})
+            # self.stats.register_channel_use(self.id,)
+            self.stats.start_iteration(self.id, {'len': len(correct_parities)})
 
             for i in range(0, len(correct_parities)):
                 if parities[i] != correct_parities[i]:
+                    self.stats.start_block(self.id)
                     corrected_index = iterations[iter_num][i][0]
                     for j in range(0, iter_num + 1):
                         correcting_block = self._get_block_containing_index(iterations[iter_num - j],
