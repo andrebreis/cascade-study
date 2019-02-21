@@ -1,7 +1,6 @@
 import math
 
 from implementations.template import CascadeTemplate
-from study.statistics import Statistics
 
 
 class OriginalCascade(CascadeTemplate):

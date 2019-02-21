@@ -5,16 +5,29 @@ from study.status import Status
 
 class Statistics(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, infile=None):
         os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
         if not os.path.isfile(filename):
             with open(filename, 'w') as f:
-                f.write('correct key, initial key, final key, error rate, correct, ber, efficiency, channel_uses\n')
+                f.write('correct key,initial key,final key,error rate,correct,ber,efficiency,channel_uses,seed\n')
         self.filename = filename
         self.status = {}
+        if infile is not None:
+            self.read_status(infile)
 
-    def initialize_run(self, id, c_key, key, error):
-        self.status[id] = Status(c_key, key, error)
+    def read_status(self, file):
+        if not os.path.isfile(file):
+            print('%s does not exist, ignoring...' % file)
+            return
+
+        with open(file, 'r') as f:
+            lines = f.readlines()
+            for i in range(1, len(lines)):
+                if lines[i] != '\n':
+                    self.status[str(i)] = Status.from_line(lines[i])
+
+    def initialize_run(self, id, c_key, key, error, seed):
+        self.status[id] = Status(c_key, key, error, seed)
 
     def start_iteration(self, id, channel_use):
         self.status[id].start_iteration(channel_use)

@@ -3,10 +3,11 @@ from math import log2
 
 class Status(object):
 
-    def __init__(self, correct_key, initial_key, error_rate):
+    def __init__(self, correct_key, initial_key, error_rate, seed):
         self.correct_key = correct_key
         self.initial_key = initial_key
         self.error_rate = error_rate
+        self.seed = seed
 
         self.final_key = None
         self.channel_uses = []
@@ -22,7 +23,6 @@ class Status(object):
 
     def add_channel_use(self, channel_use):
         self.channel_uses[-1][-1].append(channel_use['len'])
-        # print(self.channel_uses)
 
     def _calculate_ber(self):
         num_errors = 0
@@ -66,13 +66,19 @@ class Status(object):
 
     def flush_to_file(self, filename):
         with open(filename, 'a') as f:
-            f.write('%s,%s,%s,%s,%s,%s,%s,%s\n' % (self.correct_key,
-                                                   self.initial_key,
-                                                   self.final_key,
-                                                   self.error_rate,
-                                                   self.correct,
-                                                   self.bit_error_ratio,
-                                                   self.efficiency,
-                                                   self.num_channel_uses()))
+            f.write('%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % (self.correct_key,
+                                                      self.initial_key,
+                                                      self.final_key,
+                                                      self.error_rate,
+                                                      self.correct,
+                                                      self.bit_error_ratio,
+                                                      self.efficiency,
+                                                      self.num_channel_uses(),
+                                                      self.seed))
 
+    @staticmethod
+    def from_line(line):
+        split = line.split(',')
+        status = Status(split[0], split[1], split[3], split[-1])
+        return status
 

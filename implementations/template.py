@@ -2,15 +2,18 @@ import math
 import random
 import time
 
+from bitstring import BitArray
+
 
 class CascadeTemplate(object):
 
-    def __init__(self, correct_party, key, stats):
+    def __init__(self, correct_party, key, stats, seed):
         self.correct_party = correct_party
         self.key = key
         self.num_iterations = 0
         self.stats = stats
         self.id = str(time.time())
+        self.seed = seed
 
     def calculate_parity(self, indexes):
         parity = 0
@@ -19,10 +22,10 @@ class CascadeTemplate(object):
         return parity
 
     def calculate_parities(self, iteration):
-        parities = []
+        parities = ''
         for block in iteration:
-            parities.append(self.calculate_parity(block))
-        return parities
+            parities += str(self.calculate_parity(block))
+        return BitArray(bin=parities)
 
     def estimate_error(self):
         num_errors = 0.0
@@ -57,7 +60,8 @@ class CascadeTemplate(object):
         parities = []
         correct_parities = []
 
-        self.stats.initialize_run(self.id, self.correct_party.key.bin, self.key.bin, self.estimate_error())
+        self.stats.initialize_run(self.id, self.correct_party.key.bin, self.key.bin, self.estimate_error(), self.seed)
+        random.seed(self.seed)
 
         for iter_num in range(0, self.num_iterations):
             iterations.append(self.get_iteration_blocks(iter_num))
@@ -73,18 +77,19 @@ class CascadeTemplate(object):
                                                                         corrected_index)
                     if correcting_block is None:
                         continue
-                    if parities[iter_num - j][correcting_block] != correct_parities[iter_num - j][correcting_block]:
+                    if parities[iter_num - j].bin[correcting_block] != \
+                            correct_parities[iter_num - j].bin[correcting_block]:
                         self.stats.start_block(self.id)
                         corrected_index = self._binary(iterations[iter_num - j][correcting_block])
                         if corrected_index is not None:
                             self.key.invert(corrected_index)
-                            for i in range(0, len(parities)):
-                                corrected_block = self._get_block_containing_index(iterations[i], corrected_index)
-                                parities[i][corrected_block] = (parities[i][corrected_block] + 1) % 2
+                            for k in range(0, len(parities)):
+                                corrected_block = self._get_block_containing_index(iterations[k], corrected_index)
+                                parities[k].invert(corrected_block)
 
         self.stats.end_run(self.id, self.key.bin)
 
-    def _binary(self, block):
+    def _binary(self, block, iteration_num=0):
         """
         Finds the index of an odd error in the given block
         :param block list indexes of the bits of key forming the block to perform the protocol
