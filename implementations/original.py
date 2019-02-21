@@ -1,12 +1,13 @@
 import math
 
 from implementations.template import CascadeTemplate
+from study.statistics import Statistics
 
 
 class OriginalCascade(CascadeTemplate):
 
-    def __init__(self, correct_party, key):
-        CascadeTemplate.__init__(self, correct_party, key)
+    def __init__(self, correct_party, key, stats):
+        CascadeTemplate.__init__(self, correct_party, key, stats)
         self.error_rate = self.estimate_error()
         self.num_iterations = 4
 
@@ -19,5 +20,3 @@ class OriginalCascade(CascadeTemplate):
             return blocks
 
         return self.shuffle_blocks(block_size * pow(2, iter_num))
-
-
