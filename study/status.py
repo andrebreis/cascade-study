@@ -1,11 +1,13 @@
 from math import log2
 
+from utils.key import Key
+
 
 class Status(object):
 
     def __init__(self, correct_key, initial_key, error_rate, seed):
-        self.correct_key = correct_key
-        self.initial_key = initial_key
+        self.correct_key = Key(correct_key.hex)
+        self.initial_key = Key(initial_key.hex)
         self.error_rate = error_rate
         self.seed = seed
 
@@ -27,7 +29,7 @@ class Status(object):
     def _calculate_ber(self):
         num_errors = 0
         for i in range(0, len(self.final_key)):
-            num_errors += int(self.final_key[i]) ^ int(self.correct_key[i])
+            num_errors += int(self.final_key.bin[i]) ^ int(self.correct_key.bin[i])
         return num_errors / len(self.final_key)
 
     def _deep_sum(self, lst):

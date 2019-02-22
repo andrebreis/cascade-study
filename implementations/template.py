@@ -41,7 +41,7 @@ class CascadeTemplate(object):
         parities = []
         correct_parities = []
 
-        self.stats.initialize_run(self.id, self.correct_key.bin, self.key.bin, self.estimate_error(), self.seed)
+        self.stats.initialize_run(self.id, self.correct_key, self.key, self.estimate_error(), self.seed)
         random.seed(self.seed)
 
         for iter_num in range(0, self.num_iterations):
@@ -68,7 +68,7 @@ class CascadeTemplate(object):
                                 corrected_block = self._get_block_containing_index(iterations[k], corrected_index)
                                 parities[k].invert(corrected_block)
 
-        self.stats.end_run(self.id, self.key.bin)
+        self.stats.end_run(self.id, self.key)
 
     def _binary(self, block, iteration_num=0):
         """
