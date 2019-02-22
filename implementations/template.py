@@ -2,43 +2,24 @@ import math
 import random
 import time
 
-from bitstring import BitArray
-
 
 class CascadeTemplate(object):
 
-    def __init__(self, correct_party, key, stats, seed):
-        self.correct_party = correct_party
+    def __init__(self, correct_key, key, stats, seed):
+        self.correct_key = correct_key
         self.key = key
         self.num_iterations = 0
         self.stats = stats
         self.id = str(time.time())
         self.seed = seed
 
-    def calculate_parity(self, indexes):
-        parity = 0
-        for index in indexes:
-            parity = (parity + int(self.key.bin[index])) % 2
-        return parity
-
-    def calculate_parities(self, iteration):
-        parities = ''
-        for block in iteration:
-            parities += str(self.calculate_parity(block))
-        return BitArray(bin=parities)
-
     def estimate_error(self):
-        num_errors = 0.0
-        for i in range(0, len(self.key)):
-            if self.key.bin[i] != self.correct_party.key.bin[i]:
-                num_errors += 1
-        return num_errors / len(self.key)
+        return self.key.hamming_distance(self.correct_key) / len(self.key)
 
     def shuffle_blocks(self, block_size):
         blocks = []
 
         temp_indices = list(range(0, len(self.key)))
-        # TODO: random.seed(random_seed) and save seed
         random.shuffle(temp_indices)
 
         for i in range(0, len(self.key), block_size):
@@ -60,13 +41,13 @@ class CascadeTemplate(object):
         parities = []
         correct_parities = []
 
-        self.stats.initialize_run(self.id, self.correct_party.key.bin, self.key.bin, self.estimate_error(), self.seed)
+        self.stats.initialize_run(self.id, self.correct_key.bin, self.key.bin, self.estimate_error(), self.seed)
         random.seed(self.seed)
 
         for iter_num in range(0, self.num_iterations):
             iterations.append(self.get_iteration_blocks(iter_num))
-            parities.append(self.calculate_parities(iterations[iter_num]))
-            correct_parities.append(self.correct_party.calculate_parities(iterations[iter_num]))
+            parities.append(self.key.calculate_parities(iterations[iter_num]))
+            correct_parities.append(self.correct_key.calculate_parities(iterations[iter_num]))
 
             self.stats.start_iteration(self.id, {'len': len(correct_parities[iter_num])})
 
@@ -96,18 +77,18 @@ class CascadeTemplate(object):
         :returns the index of the error
         """
         first_half_size = math.ceil(len(block) / 2)
-        correct_first_half_par = self.correct_party.calculate_parity(block[:first_half_size])
+        correct_first_half_par = self.correct_key.calculate_block_parity(block[:first_half_size])
         self.stats.register_channel_use(self.id, {'len': 1})
-
-        first_half_par = self.calculate_parity(block[:first_half_size])
+        iteration_num += 1
+        first_half_par = self.key.calculate_block_parity(block[:first_half_size])
 
         if first_half_par != correct_first_half_par:
             if first_half_size == 1:
                 return block[0]
             else:
-                return self._binary(block[:first_half_size])
+                return self._binary(block[:first_half_size], iteration_num)
         else:
             if len(block) - first_half_size == 1:
                 return block[-1]
             else:
-                return self._binary(block[first_half_size:])
+                return self._binary(block[first_half_size:], iteration_num)
