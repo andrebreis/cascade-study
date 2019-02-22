@@ -5,8 +5,8 @@ from implementations.template import CascadeTemplate
 
 class OriginalCascade(CascadeTemplate):
 
-    def __init__(self, correct_party, key, stats):
-        CascadeTemplate.__init__(self, correct_party, key, stats)
+    def __init__(self, correct_party, key, stats, seed):
+        CascadeTemplate.__init__(self, correct_party, key, stats, seed)
         self.error_rate = self.estimate_error()
         self.num_iterations = 4
 
