@@ -1,6 +1,5 @@
 import math
 import random
-import time
 
 
 class CascadeTemplate(object):
@@ -10,7 +9,7 @@ class CascadeTemplate(object):
         self.key = key
         self.num_iterations = 0
         self.stats = stats
-        self.id = str(time.time())
+        self.id = seed
         self.seed = seed
 
     def estimate_error(self):
