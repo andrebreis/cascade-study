@@ -3,11 +3,11 @@ from bitstring import BitArray
 
 class Key(BitArray):
 
-    def __new__(cls, binary_str):
-        return super(Key, cls).__new__(cls, bin=binary_str)
+    def __new__(cls, hex_str=''):
+        return super(Key, cls).__new__(cls, hex=hex_str)
 
-    def __init__(self, binary_str):
-        super(Key, self).__init__(self, bin=binary_str)
+    def __init__(self, hex_str=''):
+        super(Key, self).__init__(self, hex=hex_str)
 
     def calculate_block_parity(self, block_indexes):
         parity = 0
