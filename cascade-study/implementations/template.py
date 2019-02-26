@@ -4,12 +4,11 @@ import random
 
 class CascadeTemplate(object):
 
-    def __init__(self, correct_key, key, stats, seed):
+    def __init__(self, correct_key, key, status, seed):
         self.correct_key = correct_key
         self.key = key
         self.num_iterations = 0
-        self.stats = stats
-        self.id = seed
+        self.status = status
         self.seed = seed
 
     def estimate_error(self):
@@ -40,7 +39,7 @@ class CascadeTemplate(object):
         parities = []
         correct_parities = []
 
-        self.stats.initialize_run(self.id, self.correct_key, self.key, self.estimate_error(), self.seed)
+        self.status.initialize_run(self.correct_key, self.estimate_error())
         random.seed(self.seed)
 
         for iter_num in range(0, self.num_iterations):
@@ -48,7 +47,7 @@ class CascadeTemplate(object):
             parities.append(self.key.calculate_parities(iterations[iter_num]))
             correct_parities.append(self.correct_key.calculate_parities(iterations[iter_num]))
 
-            self.stats.start_iteration(self.id, {'len': len(correct_parities[iter_num])})
+            self.status.start_iteration({'len': len(correct_parities[iter_num])})
 
             for i in range(0, len(correct_parities[iter_num])):
                 corrected_index = iterations[iter_num][i][0]
@@ -59,7 +58,7 @@ class CascadeTemplate(object):
                         continue
                     if parities[iter_num - j].bin[correcting_block] != \
                             correct_parities[iter_num - j].bin[correcting_block]:
-                        self.stats.start_block(self.id)
+                        self.status.start_block()
                         corrected_index = self._binary(iterations[iter_num - j][correcting_block])
                         if corrected_index is not None:
                             self.key.invert(corrected_index)
@@ -67,7 +66,7 @@ class CascadeTemplate(object):
                                 corrected_block = self._get_block_containing_index(iterations[k], corrected_index)
                                 parities[k].invert(corrected_block)
 
-        self.stats.end_run(self.id, self.key)
+        self.status.end_run(self.key)
 
     def _binary(self, block, iteration_num=0):
         """
@@ -77,7 +76,7 @@ class CascadeTemplate(object):
         """
         first_half_size = math.ceil(len(block) / 2)
         correct_first_half_par = self.correct_key.calculate_block_parity(block[:first_half_size])
-        self.stats.register_channel_use(self.id, {'len': 1})
+        self.status.add_channel_use({'len': 1})
         iteration_num += 1
         first_half_par = self.key.calculate_block_parity(block[:first_half_size])
 

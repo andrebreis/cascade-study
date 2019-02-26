@@ -1,15 +1,13 @@
 import multiprocessing
-import time
 import uuid
 from argparse import ArgumentParser
 import sys
-from secrets import randbits
 
 from joblib import Parallel, delayed
 
 from datasets.generator import generate_dataset, read_keypair
 from implementations.original import OriginalCascade
-from study.statistics import Statistics
+from study.status import Status
 from utils.key import Key
 from utils.study_utils import DATASET_SIZE, get_datasets_path, get_results_path
 
@@ -47,15 +45,16 @@ def create_dataset(cmd=None):
     generate_dataset(get_datasets_path(args.out), args.key_len, args.error_rate, args.size)
 
 
-def run_study(stats, filename, algorithm, i):
-    correct_key, key = read_keypair(filename, i)
-    for _ in range(0, 100):
-        run = algorithm(Key(correct_key.hex), Key(key.hex), stats, uuid.uuid4())
+def run_study(stats_file, dataset_file, algorithm, line_num, runs):
+    correct_key, key = read_keypair(dataset_file, line_num)
+    for _ in range(0, runs):
+        seed = uuid.uuid4()
+        stats = Status(stats_file, dataset_file, line_num, seed)
+        run = algorithm(Key(correct_key.hex), Key(key.hex), stats, seed)
         run.run_algorithm()
 
 
 def run_algorithm(cmd=None):
-
     algorithms = {
         'original': OriginalCascade
     }
@@ -67,14 +66,15 @@ def run_algorithm(cmd=None):
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('dataset', type=str, help='Name of the file containing the dataset')
     parser.add_argument('-o', '--out', default='out.csv', type=str, help='Name of the file to output results')
+    parser.add_argument('-r', '--runs', default=100, type=int, help="Number of algorithm runs per key")
 
     args = parser.parse_args(cmd)
-    statistics = Statistics(get_results_path(args.out))
 
     num_cores = multiprocessing.cpu_count()
 
     Parallel(n_jobs=num_cores, verbose=50)(
-        delayed(run_study)(statistics, args.dataset, algorithms[args.algorithm], i) for i in range(0, DATASET_SIZE))
+        delayed(run_study)(get_results_path(args.out), args.dataset, algorithms[args.algorithm], i, args.runs) for i in
+        range(0, DATASET_SIZE))
 
 
 if __name__ == '__main__':

@@ -1,21 +1,33 @@
+import os
 from math import log2
-
-from utils.key import Key
 
 
 class Status(object):
 
-    def __init__(self, correct_key, initial_key, error_rate, seed):
-        self.correct_key = Key(correct_key.hex)
-        self.initial_key = Key(initial_key.hex)
-        self.error_rate = error_rate
+    def __init__(self, filename, dataset_file, dataset_line, seed):
+
+        os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
+        if not os.path.isfile(filename):
+            with open(filename, 'w') as f:
+                f.write('dataset file,dataset line,error rate,correct,ber,efficiency,channel_uses,seed\n')
+        self.filename = filename
+
+        self.dataset_file = dataset_file
+        self.dataset_line = dataset_line
         self.seed = seed
+
+        self.correct_key = None
+        self.error_rate = 0.0
 
         self.final_key = None
         self.channel_uses = []
         self.correct = True
         self.bit_error_ratio = 0
         self.efficiency = 1.0
+
+    def initialize_run(self, c_key, error):
+        self.correct_key = c_key
+        self.error_rate = error
 
     def start_iteration(self, channel_use):
         self.channel_uses.append([channel_use['len']])
@@ -56,8 +68,13 @@ class Status(object):
         # print(1 - sum(self.channel_uses)/len(self.initial_key))
         # print(self.error_rate)
         # print( -self.error_rate*log2(self.error_rate)-(1-self.error_rate)*log2(1-self.error_rate))
-        return (1 - self.exchanged_msg_len() / len(self.initial_key)) / (
-            -self.error_rate*log2(self.error_rate)-(1-self.error_rate)*log2(1-self.error_rate))
+        return (1 - self.exchanged_msg_len() / len(self.correct_key)) / (
+                -self.error_rate * log2(self.error_rate) - (1 - self.error_rate) * log2(1 - self.error_rate))
+
+    def end_run(self, final_key):
+        self.final_key = final_key
+        self.calculate_parameters()
+        self.flush_to_file()
 
     def calculate_parameters(self):
         if self.final_key != self.correct_key:
@@ -66,21 +83,19 @@ class Status(object):
 
         self.efficiency = self._calculate_efficiency()
 
-    def flush_to_file(self, filename):
-        with open(filename, 'a') as f:
-            f.write('%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % (self.correct_key,
-                                                      self.initial_key,
-                                                      self.final_key,
-                                                      self.error_rate,
-                                                      self.correct,
-                                                      self.bit_error_ratio,
-                                                      self.efficiency,
-                                                      self.num_channel_uses(),
-                                                      self.seed))
+    def flush_to_file(self):
+        with open(self.filename, 'a') as f:
+            f.write('%s,%s,%s,%s,%s,%s,%s,%s\n' % (self.dataset_file,
+                                                   self.dataset_line,
+                                                   self.error_rate,
+                                                   self.correct,
+                                                   self.bit_error_ratio,
+                                                   self.efficiency,
+                                                   self.num_channel_uses(),
+                                                   self.seed))
 
     @staticmethod
-    def from_line(line):
+    def from_line(filename, line):
         split = line.split(',')
-        status = Status(split[0], split[1], split[3], split[-1])
+        status = Status(filename, split[0], split[1], split[-1])
         return status
-

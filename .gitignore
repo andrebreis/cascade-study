@@ -230,3 +230,6 @@ pyvenv.cfg
 pip-selfcheck.json
 
 # End of https://www.gitignore.io/api/venv,linux,python,pycharm
+
+results/
+datasets/
