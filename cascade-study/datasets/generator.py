@@ -1,5 +1,3 @@
-import multiprocessing
-
 from joblib import Parallel, delayed
 
 import os
@@ -17,8 +15,10 @@ def _generate_keypair(keylength, error_rate):
     correct_key = BitArray(uint=s, length=keylength)
     key = BitArray(correct_key)
 
-    for i in range(0, round(keylength * error_rate)):
-        key.invert(random.randint(0, keylength - 1))
+    for i in range(0, len(key)):
+        rand = random.randint(0, 100000)
+        if rand < error_rate*100000:
+            key.invert(i)
 
     return correct_key, key
 
@@ -26,7 +26,7 @@ def _generate_keypair(keylength, error_rate):
 def _write_keypair(filename, keylength, error_rate):
     correct_key, initial_key = _generate_keypair(keylength, error_rate)
     with open(filename, 'a') as f:
-        f.write('%s,%s\n' % (correct_key.hex, initial_key.hex))
+        f.write('%s,%s,%s\n' % (correct_key.hex, initial_key.hex, error_rate))
 
 
 def read_keypair(filename, line_number):
@@ -37,7 +37,7 @@ def read_keypair(filename, line_number):
         line = f.readline()
 
         line = line.split(',')
-        return Key(line[0]), Key(line[1])
+        return Key(line[0]), Key(line[1]), float(line[2])
 
 
 def generate_dataset(filename, keylength, error_rate, num_cores, dataset_size=DATASET_SIZE):

@@ -4,9 +4,10 @@ import random
 
 class CascadeTemplate(object):
 
-    def __init__(self, correct_key, key, status, seed):
+    def __init__(self, correct_key, key, error_rate, status, seed):
         self.correct_key = correct_key
         self.key = key
+        self.error_rate = error_rate
         self.num_iterations = 0
         self.status = status
         self.seed = seed
@@ -39,7 +40,7 @@ class CascadeTemplate(object):
         parities = []
         correct_parities = []
 
-        self.status.initialize_run(self.correct_key, self.estimate_error())
+        self.status.initialize_run(self.correct_key, self.error_rate, self.estimate_error())
         random.seed(self.seed)
 
         for iter_num in range(0, self.num_iterations):

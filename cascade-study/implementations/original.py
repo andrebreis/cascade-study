@@ -5,9 +5,8 @@ from implementations.template import CascadeTemplate
 
 class OriginalCascade(CascadeTemplate):
 
-    def __init__(self, correct_party, key, stats, seed):
-        CascadeTemplate.__init__(self, correct_party, key, stats, seed)
-        self.error_rate = self.estimate_error()
+    def __init__(self, correct_party, key, error_rate, status, seed):
+        CascadeTemplate.__init__(self, correct_party, key, error_rate, status, seed)
         self.num_iterations = 4
 
     def get_iteration_blocks(self, iter_num):
@@ -19,3 +18,4 @@ class OriginalCascade(CascadeTemplate):
             return blocks
 
         return self.shuffle_blocks(block_size * pow(2, iter_num))
+
