@@ -54,11 +54,11 @@ def create_dataset(cmd=None):
 
 
 def run_study(stats_file, dataset_file, algorithm, line_num, runs):
-    correct_key, key = read_keypair(get_datasets_path(dataset_file), line_num)
+    correct_key, key, error_rate = read_keypair(get_datasets_path(dataset_file), line_num)
     for _ in range(0, runs):
         seed = str(uuid.uuid4())
         stats = Status(stats_file, dataset_file, line_num, seed)
-        run = algorithm(Key(correct_key.hex), Key(key.hex), stats, seed)
+        run = algorithm(Key(correct_key.hex), Key(key.hex), error_rate, stats, seed)
         run.run_algorithm()
 
 
@@ -91,8 +91,8 @@ def run_algorithm(cmd=None):
 
 def replicate_line(infile, outfile, algorithm, line_num):
     stats = Status.from_line(outfile, infile, line_num)
-    correct_key, key = read_keypair(get_datasets_path(stats.dataset_file), stats.dataset_line)
-    run = algorithm(correct_key, key, stats, stats.seed)
+    correct_key, key, error_rate = read_keypair(get_datasets_path(stats.dataset_file), stats.dataset_line)
+    run = algorithm(correct_key, key, error_rate, stats, stats.seed)
     run.run_algorithm()
 
 
