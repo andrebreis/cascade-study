@@ -40,9 +40,7 @@ def read_keypair(filename, line_number):
         return Key(line[0]), Key(line[1])
 
 
-def generate_dataset(filename, keylength, error_rate, dataset_size=DATASET_SIZE):
-    num_cores = multiprocessing.cpu_count()
-
+def generate_dataset(filename, keylength, error_rate, num_cores, dataset_size=DATASET_SIZE):
     os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
     with open(filename, 'w'):
         pass
