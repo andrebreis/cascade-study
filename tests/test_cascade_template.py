@@ -2,9 +2,8 @@ import random
 import unittest
 
 from implementations.original import CascadeTemplate
-from study.status import Status
 from utils.key import Key
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 
 class TestCascadeTemplate(unittest.TestCase):
