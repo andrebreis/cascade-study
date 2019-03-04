@@ -68,8 +68,10 @@ class Status(object):
         # print(1 - sum(self.channel_uses)/len(self.initial_key))
         # print(self.error_rate)
         # print( -self.error_rate*log2(self.error_rate)-(1-self.error_rate)*log2(1-self.error_rate))
-        return (1 - self.exchanged_msg_len() / len(self.correct_key)) / (
-                -self.error_rate * log2(self.error_rate) - (1 - self.error_rate) * log2(1 - self.error_rate))
+        # return (1 - self.exchanged_msg_len() / len(self.correct_key)) / (
+        #         -self.error_rate * log2(self.error_rate) - (1 - self.error_rate) * log2(1 - self.error_rate))
+        return self.exchanged_msg_len() / (self.correct_key.length * (
+                -self.error_rate * log2(self.error_rate) - (1 - self.error_rate) * log2(1 - self.error_rate)))
 
     def end_run(self, final_key):
         self.final_key = final_key
@@ -95,7 +97,10 @@ class Status(object):
                                                    self.seed))
 
     @staticmethod
-    def from_line(filename, line):
-        split = line.split(',')
-        status = Status(filename, split[0], split[1], split[-1])
-        return status
+    def from_line(output_filename, input_filename, line_number):
+        with open(input_filename, 'r') as f:
+            for i, line in enumerate(f):
+                if i == line_number:
+                    split = line.split(',')
+                    status = Status(output_filename, split[0], int(split[1]), split[-1].replace('\n', ''))
+                    return status

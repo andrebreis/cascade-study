@@ -40,7 +40,8 @@ def create_dataset(cmd=None):
 
     num_cores = multiprocessing.cpu_count()
 
-    parser = ArgumentParser(description='Create dataset', usage='create_dataset keylen error_rate [-s size] [-o out]')
+    parser = ArgumentParser(description='Create dataset',
+                            usage='create_dataset keylen error_rate -s size -o out -nc num_cores')
     parser.add_argument('key_len', type=int, help='Key length for the dataset')
     parser.add_argument('error_rate', type=float, help='Error rate for the dataset')
     parser.add_argument('-s', '--size', type=int, default=DATASET_SIZE, help='Size of the dataset')
@@ -71,7 +72,8 @@ def run_algorithm(cmd=None):
 
     num_cores = multiprocessing.cpu_count()
 
-    parser = ArgumentParser(description='Run algorithm', usage='run_algorithm algorithm dataset [-o out]')
+    parser = ArgumentParser(description='Run algorithm',
+                            usage='run_algorithm algorithm dataset -o out -r runs -nc num_cores -nl num_lines')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('dataset', type=str, help='Name of the file containing the dataset')
     parser.add_argument('-o', '--out', default='out.csv', type=str, help='Name of the file to output results')
@@ -104,7 +106,8 @@ def replicate_run(cmd=None):
 
     num_cores = multiprocessing.cpu_count()
 
-    parser = ArgumentParser(description='Replicate run', usage='replicate_run algorithm infile [-o out]')
+    parser = ArgumentParser(description='Replicate run',
+                            usage='replicate_run algorithm infile -o out -nc num_cores -nl num_lines')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('infile', type=str, help='Name of the results file to validate')
     parser.add_argument('-o', '--out', default='replicate_out.csv', type=str, help='Name of the file to output results')
