@@ -12,7 +12,7 @@ from utils.key import Key
 from utils.study_utils import DATASET_SIZE, get_datasets_path, get_results_path
 
 
-def create_argument_parser():
+def execute():
     cmd = sys.argv[1:2]
 
     parser = ArgumentParser(description='Cascade study')
@@ -124,4 +124,4 @@ def replicate_run(cmd=None):
 
 
 if __name__ == '__main__':
-    create_argument_parser()
+    execute()
