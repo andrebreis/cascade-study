@@ -6,6 +6,7 @@ import sys
 from joblib import Parallel, delayed
 
 from datasets.generator import generate_dataset, read_keypair
+from implementations.biconf import CascadeBiconf
 from implementations.original import OriginalCascade
 from study.status import Status
 from utils.key import Key
@@ -64,7 +65,8 @@ def run_study(stats_file, dataset_file, algorithm, line_num, runs):
 
 def run_algorithm(cmd=None):
     algorithms = {
-        'original': OriginalCascade
+        'original': OriginalCascade,
+        'biconf': CascadeBiconf
     }
 
     if not cmd:
@@ -98,7 +100,8 @@ def replicate_line(infile, outfile, algorithm, line_num):
 
 def replicate_run(cmd=None):
     algorithms = {
-        'original': OriginalCascade
+        'original': OriginalCascade,
+        'biconf': CascadeBiconf
     }
 
     if not cmd:
