@@ -7,7 +7,7 @@ from implementations.original import OriginalCascade
 from utils.key import Key
 
 
-class TestCascadeTemplate(unittest.TestCase):
+class TestCascadeOriginal(unittest.TestCase):
 
     def test_get_iteration_blocks(self):
         algorithm = OriginalCascade(Key('ffff'), Key('bbbb'), 0.21, MagicMock(), 0)

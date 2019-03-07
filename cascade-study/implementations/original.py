@@ -19,3 +19,7 @@ class OriginalCascade(CascadeTemplate):
 
         return self.shuffle_blocks(block_size * pow(2, iter_num))
 
+    def run_algorithm(self):
+        CascadeTemplate.run_algorithm(self)
+        self.status.end_run(self.key)
+
