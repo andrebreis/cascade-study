@@ -27,17 +27,18 @@ class CascadeBiconf(CascadeTemplate):
         return self.shuffle_blocks(block_size)
 
     def run_biconf(self):
-
         num_successive_iter_no_errors = 0
         while num_successive_iter_no_errors < self.biconf_iterations:
             iteration = self.get_iteration_blocks(self.num_iterations)
 
             parities = self.key.calculate_parities(iteration)
             correct_parities = self.correct_key.calculate_parities(iteration)
+            self.status.start_iteration({'len': len(correct_parities)})
 
             if parities.bin[0] != correct_parities.bin[0]:
                 num_successive_iter_no_errors = 0
                 for i in range(0, len(iteration)):
+                    self.status.start_block()
                     correcting_index = self._binary(iteration[i])
                     if correcting_index is not None:
                         self.key.invert(correcting_index)
@@ -46,8 +47,8 @@ class CascadeBiconf(CascadeTemplate):
 
     def run_algorithm(self):
         CascadeTemplate.run_algorithm(self)
-
         self.run_biconf()
+        self.status.end_run(self.key)
 
 
 if __name__ == '__main__':

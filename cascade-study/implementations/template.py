@@ -67,8 +67,6 @@ class CascadeTemplate(object):
                                 corrected_block = self._get_block_containing_index(iterations[k], corrected_index)
                                 parities[k].invert(corrected_block)
 
-        self.status.end_run(self.key)
-
     def _binary(self, block, iteration_num=0):
         """
         Finds the index of an odd error in the given block
