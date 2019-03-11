@@ -72,6 +72,7 @@ class Status(object):
     def num_channel_uses(self):
         num = 0
         for iteration in self.channel_uses:
+            iteration = list(filter(None, iteration))
             num += 1
             max_len = 0
             for i in range(1, len(iteration)):  # for each iteration get the minimum needed number of uses
