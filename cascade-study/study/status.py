@@ -9,6 +9,7 @@ ALL_DATA = 3
 class Status(object):
 
     def __init__(self, filename, dataset_file, dataset_line, seed, level=NO_LOG):
+        self.level = level
         if level > NO_LOG:
             os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
             if not os.path.isfile(filename):
@@ -32,8 +33,6 @@ class Status(object):
             self.efficiency = 1.0
 
             self.iterations_data = ''
-
-            self.level = level
 
     def initialize_run(self, c_key, channel_error, real_error):
         self.correct_key = c_key

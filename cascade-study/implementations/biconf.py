@@ -27,6 +27,7 @@ class CascadeBiconf(CascadeTemplate):
         return self.shuffle_blocks(block_size)
 
     def run_biconf(self):
+        max_iter = 0
         num_successive_iter_no_errors = 0
         while num_successive_iter_no_errors < self.biconf_iterations:
             iteration = self.get_iteration_blocks(self.num_iterations)
@@ -44,16 +45,11 @@ class CascadeBiconf(CascadeTemplate):
                         self.key.invert(correcting_index)
             else:
                 num_successive_iter_no_errors += 1
+                if num_successive_iter_no_errors > max_iter:
+                    max_iter = num_successive_iter_no_errors
+                    self.status.save_iteration_info(self.key)
 
     def run_algorithm(self):
         CascadeTemplate.run_algorithm(self)
         self.run_biconf()
         self.status.end_run(self.key)
-
-
-if __name__ == '__main__':
-    correct_key, key = _generate_keypair(1024, 0.05)
-    run = CascadeBiconf(Key(correct_key.hex), Key(key.hex), 0.05, Status('/tmp/test', 'asd', 1, 1337), 1337)
-    run.run_algorithm()
-    print(run.key == run.correct_key)
-
