@@ -128,7 +128,7 @@ def replicate_run(cmd=None):
 
     Parallel(n_jobs=args.num_cores, verbose=50)(
         delayed(replicate_line)(get_results_path(args.infile), get_results_path(args.out), algorithms[args.algorithm],
-                                i, args.stats_level) for i in range(1, args.num_lines)
+                                i, args.stats_level) for i in range(1, args.num_lines+1)
     )
 
 

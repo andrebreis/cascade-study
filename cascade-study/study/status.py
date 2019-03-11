@@ -14,7 +14,7 @@ class Status(object):
             if not os.path.isfile(filename):
                 with open(filename, 'w') as f:
                     f.write('dataset file,dataset line,channel error rate,real error rate,' +
-                            'correct,ber,efficiency,channel uses,exchanged msg length,seed,[cor,ber,eff,cu,eml]*\n')
+                            'correct,ber,efficiency,channel uses,exchanged msg length,seed,[ber]*\n')
             self.filename = filename
 
             self.dataset_file = dataset_file
@@ -56,8 +56,7 @@ class Status(object):
         if self.level == ALL_DATA:
             self.final_key = key
             self.calculate_parameters()
-            self.iterations_data += '[%s,%s,%s,%s,%s]' % (
-                self.correct, self.bit_error_ratio, self.efficiency, self.num_channel_uses(), self.exchanged_msg_len())
+            self.iterations_data += '%s;' % self.bit_error_ratio
 
     def _calculate_ber(self):
         num_errors = 0
@@ -124,5 +123,5 @@ class Status(object):
             for i, line in enumerate(f):
                 if i == line_number:
                     split = line.split(',')
-                    status = Status(output_filename, split[0], int(split[1]), split[-1].replace('\n', ''), level)
+                    status = Status(output_filename, split[0], int(split[1]), split[-2], level)
                     return status
