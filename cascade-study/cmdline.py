@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 from datasets.generator import generate_dataset, read_keypair
 from implementations.biconf import CascadeBiconf
 from implementations.original import OriginalCascade
-from study.status import Status
+from study.status import Status, NO_LOG, FINAL_DATA, ALL_DATA
 from utils.key import Key
 from utils.study_utils import DATASET_SIZE, get_datasets_path, get_results_path
 
@@ -54,11 +54,11 @@ def create_dataset(cmd=None):
     generate_dataset(get_datasets_path(args.out), args.key_len, args.error_rate, args.num_cores, args.size)
 
 
-def run_study(stats_file, dataset_file, algorithm, line_num, runs):
+def run_study(stats_file, dataset_file, algorithm, line_num, runs, stats_level):
     correct_key, key, error_rate = read_keypair(get_datasets_path(dataset_file), line_num)
     for _ in range(0, runs):
         seed = str(uuid.uuid4())
-        stats = Status(stats_file, dataset_file, line_num, seed)
+        stats = Status(stats_file, dataset_file, line_num, seed, stats_level)
         run = algorithm(Key(correct_key.hex), Key(key.hex), error_rate, stats, seed)
         run.run_algorithm()
 
@@ -75,7 +75,8 @@ def run_algorithm(cmd=None):
     num_cores = multiprocessing.cpu_count()
 
     parser = ArgumentParser(description='Run algorithm',
-                            usage='run_algorithm algorithm dataset -o out -r runs -nc num_cores -nl num_lines')
+                            usage='run_algorithm algorithm dataset -o out -r runs -nc num_cores -nl num_lines ' +
+                                  '-sl stats_level')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('dataset', type=str, help='Name of the file containing the dataset')
     parser.add_argument('-o', '--out', default='out.csv', type=str, help='Name of the file to output results')
@@ -83,16 +84,19 @@ def run_algorithm(cmd=None):
     parser.add_argument('-nc', '--num-cores', type=int, default=num_cores, choices=range(1, num_cores + 1),
                         help='Number of cores to allocate for the execution')
     parser.add_argument('-nl', '--num-lines', type=int, default=DATASET_SIZE, help='Number of lines to process')
+    parser.add_argument('-sl', '--stats-level', type=int, default=FINAL_DATA, choices=[NO_LOG, FINAL_DATA, ALL_DATA],
+                        help='Stats level: 1 - NO LOG, 2 - FINAL DATA, 3 - ALL DATA')
 
     args = parser.parse_args(cmd)
 
     Parallel(n_jobs=args.num_cores, verbose=50)(
-        delayed(run_study)(get_results_path(args.out), args.dataset, algorithms[args.algorithm], i, args.runs) for i in
+        delayed(run_study)(get_results_path(args.out), args.dataset, algorithms[args.algorithm], i, args.runs,
+                           args.stats_level) for i in
         range(0, args.num_lines))
 
 
-def replicate_line(infile, outfile, algorithm, line_num):
-    stats = Status.from_line(outfile, infile, line_num)
+def replicate_line(infile, outfile, algorithm, line_num, stats_level):
+    stats = Status.from_line(outfile, infile, line_num, stats_level)
     correct_key, key, error_rate = read_keypair(get_datasets_path(stats.dataset_file), stats.dataset_line)
     run = algorithm(correct_key, key, error_rate, stats, stats.seed)
     run.run_algorithm()
@@ -117,12 +121,14 @@ def replicate_run(cmd=None):
     parser.add_argument('-nc', '--num-cores', type=int, default=num_cores, choices=range(1, num_cores + 1),
                         help='Number of cores to allocate for the execution')
     parser.add_argument('-nl', '--num-lines', type=int, default=DATASET_SIZE, help='Number of lines to process')
+    parser.add_argument('-sl', '--stats-level', type=int, default=FINAL_DATA, choices=[NO_LOG, FINAL_DATA, ALL_DATA],
+                        help='Stats level: 1 - NO LOG, 2 - FINAL DATA, 3 - ALL DATA')
 
     args = parser.parse_args(cmd)
 
     Parallel(n_jobs=args.num_cores, verbose=50)(
         delayed(replicate_line)(get_results_path(args.infile), get_results_path(args.out), algorithms[args.algorithm],
-                                i) for i in range(1, args.num_lines)
+                                i, args.stats_level) for i in range(1, args.num_lines+1)
     )
 
 
