@@ -52,6 +52,7 @@ class CascadeTemplate(object):
 
             for i in range(0, len(correct_parities[iter_num])):
                 corrected_index = iterations[iter_num][i][0]
+                self.status.start_block()
                 for j in range(0, iter_num + 1):
                     correcting_block = self._get_block_containing_index(iterations[iter_num - j],
                                                                         corrected_index)
@@ -59,7 +60,6 @@ class CascadeTemplate(object):
                         continue
                     if parities[iter_num - j].bin[correcting_block] != \
                             correct_parities[iter_num - j].bin[correcting_block]:
-                        self.status.start_block()
                         corrected_index = self._binary(iterations[iter_num - j][correcting_block])
                         if corrected_index is not None:
                             self.key.invert(corrected_index)

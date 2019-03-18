@@ -24,12 +24,12 @@ class TestCascadeTemplate(unittest.TestCase):
 
     def test_num_channel_uses(self):
         status = Status('/tmp/test', 'test', 0, 0)
-        status.channel_uses = [[8, [1, 1, 1], [1], [1, 1, 1, 1]], [3, [1], [1], [1]], [5, [2, 3], [1, 1, 1]]]
+        status.channel_uses = [[8, [], [1, 1, 1], [1], [1, 1, 1, 1]], [3, [1], [1], [1]], [5, [2, 3], [1, 1, 1]]]
 
         self.assertEqual(status.num_channel_uses(), 11)
 
     def test_exchanged_msg_len(self):
         status = Status('/tmp/test', 'test', 0, 0)
-        status.channel_uses = [[8, [1, 1, 1], [1], [1, 1, 1, 1]], [3, [1], [1], [1]], [5, [2, 3], [1, 1, 1]]]
+        status.channel_uses = [[8, [1, 1, 1], [1], [1, 1, 1, 1]], [3, [1], [1], [], [1]], [5, [2, 3], [1, 1, 1]]]
 
         self.assertEqual(status.exchanged_msg_len(), 35)
