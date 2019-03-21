@@ -46,12 +46,15 @@ def create_dataset(cmd=None):
     parser.add_argument('key_len', type=int, help='Key length for the dataset')
     parser.add_argument('error_rate', type=float, help='Error rate for the dataset')
     parser.add_argument('-s', '--size', type=int, default=DATASET_SIZE, help='Size of the dataset')
-    parser.add_argument('-o', '--out', default='dataset.csv', type=str, help='Name of the file to output dataset')
+    parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output dataset')
     parser.add_argument('-nc', '--num-cores', type=int, default=num_cores, choices=range(1, num_cores + 1),
                         help='Number of cores to allocate for the execution')
+    parser.add_argument('-v', '--verbose', action='store_const', const=50, default=15)
 
     args = parser.parse_args(cmd)
-    generate_dataset(get_datasets_path(args.out), args.key_len, args.error_rate, args.num_cores, args.size)
+    if args.out == '':
+        args.out = str(args.key_len) + '-' + str(args.error_rate).replace('.', '') + '.csv'
+    generate_dataset(get_datasets_path(args.out), args.key_len, args.error_rate, args.num_cores, args.size, args.verbose)
 
 
 def run_study(stats_file, dataset_file, algorithm, line_num, runs, stats_level):
@@ -79,17 +82,19 @@ def run_algorithm(cmd=None):
                                   '-sl stats_level')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('dataset', type=str, help='Name of the file containing the dataset')
-    parser.add_argument('-o', '--out', default='out.csv', type=str, help='Name of the file to output results')
-    parser.add_argument('-r', '--runs', default=100, type=int, help='Number of algorithm runs per key')
+    parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output results')
+    parser.add_argument('-r', '--runs', default=1, type=int, help='Number of algorithm runs per key')
     parser.add_argument('-nc', '--num-cores', type=int, default=num_cores, choices=range(1, num_cores + 1),
                         help='Number of cores to allocate for the execution')
     parser.add_argument('-nl', '--num-lines', type=int, default=DATASET_SIZE, help='Number of lines to process')
     parser.add_argument('-sl', '--stats-level', type=int, default=FINAL_DATA, choices=[NO_LOG, FINAL_DATA, ALL_DATA],
                         help='Stats level: 1 - NO LOG, 2 - FINAL DATA, 3 - ALL DATA')
+    parser.add_argument('-v', '--verbose', action='store_const', const=50, default=15)
 
     args = parser.parse_args(cmd)
-
-    Parallel(n_jobs=args.num_cores, verbose=50)(
+    if args.out == '':
+        args.out = args.algorithm + '/' + args.algorithm + '-' + args.dataset.replace('.csv', '.res.csv')
+    Parallel(n_jobs=args.num_cores, verbose=args.verbose)(
         delayed(run_study)(get_results_path(args.out), args.dataset, algorithms[args.algorithm], i, args.runs,
                            args.stats_level) for i in
         range(0, args.num_lines))
@@ -117,16 +122,19 @@ def replicate_run(cmd=None):
                             usage='replicate_run algorithm infile -o out -nc num_cores -nl num_lines')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('infile', type=str, help='Name of the results file to validate')
-    parser.add_argument('-o', '--out', default='replicate_out.csv', type=str, help='Name of the file to output results')
+    parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output results')
     parser.add_argument('-nc', '--num-cores', type=int, default=num_cores, choices=range(1, num_cores + 1),
                         help='Number of cores to allocate for the execution')
     parser.add_argument('-nl', '--num-lines', type=int, default=DATASET_SIZE, help='Number of lines to process')
     parser.add_argument('-sl', '--stats-level', type=int, default=FINAL_DATA, choices=[NO_LOG, FINAL_DATA, ALL_DATA],
                         help='Stats level: 1 - NO LOG, 2 - FINAL DATA, 3 - ALL DATA')
+    parser.add_argument('-v', '--verbose', action='store_const', const=50, default=15)
 
     args = parser.parse_args(cmd)
+    if args.out == '':
+        args.out = args.infile.replace('.csv', '.replica.csv')
 
-    Parallel(n_jobs=args.num_cores, verbose=50)(
+    Parallel(n_jobs=args.num_cores, verbose=args.verbose)(
         delayed(replicate_line)(get_results_path(args.infile), get_results_path(args.out), algorithms[args.algorithm],
                                 i, args.stats_level) for i in range(1, args.num_lines+1)
     )
