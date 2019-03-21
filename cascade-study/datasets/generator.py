@@ -40,9 +40,9 @@ def read_keypair(filename, line_number):
         return Key(line[0]), Key(line[1]), float(line[2])
 
 
-def generate_dataset(filename, keylength, error_rate, num_cores, dataset_size=DATASET_SIZE):
+def generate_dataset(filename, keylength, error_rate, num_cores, dataset_size, verbosity):
     os.makedirs(os.path.dirname(os.path.abspath(filename)), exist_ok=True)
     with open(filename, 'w'):
         pass
-    Parallel(n_jobs=num_cores, verbose=50)(
+    Parallel(n_jobs=num_cores, verbose=verbosity)(
         delayed(_write_keypair)(filename, keylength, error_rate) for _ in range(0, dataset_size))
