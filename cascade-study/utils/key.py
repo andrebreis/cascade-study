@@ -11,9 +11,8 @@ class Key(BitArray):
 
     def calculate_block_parity(self, block_indexes):
         parity = 0
-        bitstring = self.bin
         for index in block_indexes:
-            parity = (parity + int(bitstring[index])) % 2
+            parity = (parity + self[index]) % 2
         return parity
 
     def calculate_parities(self, block_list):
@@ -24,9 +23,7 @@ class Key(BitArray):
 
     def hamming_distance(self, other_key):
         num_errors = 0
-        self_bitstring = self.bin
-        other_bitstring = other_key.bin
-        for i in range(0, len(self_bitstring)):
-            if self_bitstring[i] != other_bitstring[i]:
+        for i in range(0, len(other_key)):
+            if self[i] != other_key[i]:
                 num_errors += 1
         return num_errors

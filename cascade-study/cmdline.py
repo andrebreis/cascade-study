@@ -8,6 +8,7 @@ from joblib import Parallel, delayed
 from datasets.generator import generate_dataset, read_keypair
 from implementations.biconf import CascadeBiconf
 from implementations.original import OriginalCascade
+from implementations.sugimoto import SugimotoCascade
 from study.status import Status, NO_LOG, FINAL_DATA, ALL_DATA
 from utils.key import Key
 from utils.study_utils import DATASET_SIZE, get_datasets_path, get_results_path
@@ -69,7 +70,8 @@ def run_study(stats_file, dataset_file, algorithm, line_num, runs, stats_level):
 def run_algorithm(cmd=None):
     algorithms = {
         'original': OriginalCascade,
-        'biconf': CascadeBiconf
+        'biconf': CascadeBiconf,
+        'sugimoto': SugimotoCascade
     }
 
     if not cmd:
@@ -110,7 +112,8 @@ def replicate_line(infile, outfile, algorithm, line_num, stats_level):
 def replicate_run(cmd=None):
     algorithms = {
         'original': OriginalCascade,
-        'biconf': CascadeBiconf
+        'biconf': CascadeBiconf,
+        'sugimoto': SugimotoCascade
     }
 
     if not cmd:
