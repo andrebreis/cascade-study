@@ -35,6 +35,22 @@ class CascadeTemplate(object):
             if index in iteration[i]:
                 return i
 
+    def cascade_effect(self, current_block, current_iter, iterations, parities, correct_parities):
+        errors_to_process = [(current_iter, current_block)]
+
+        while errors_to_process:
+            (iteration, processing_block) = errors_to_process.pop()
+            if parities[iteration][processing_block] != correct_parities[iteration][processing_block]:
+                correcting_index = self._binary(iterations[iteration][processing_block])
+                self.key.invert(correcting_index)
+                parities[iteration].invert(processing_block)
+                for i in range(0, current_iter + 1):
+                    if i != iteration:
+                        block_to_process = self._get_block_containing_index(iterations[i], correcting_index)
+                        parities[i].invert(block_to_process)
+                        errors_to_process.append((i, block_to_process))
+                errors_to_process.sort(key=lambda x: x[0])
+
     def run_algorithm(self):
         iterations = []
         parities = []
@@ -51,21 +67,8 @@ class CascadeTemplate(object):
             self.status.start_iteration({'len': len(correct_parities[iter_num])})
 
             for i in range(0, len(correct_parities[iter_num])):
-                corrected_index = iterations[iter_num][i][0]
                 self.status.start_block()
-                for j in range(0, iter_num + 1):
-                    correcting_block = self._get_block_containing_index(iterations[iter_num - j],
-                                                                        corrected_index)
-                    if correcting_block is None:
-                        continue
-                    if parities[iter_num - j].bin[correcting_block] != \
-                            correct_parities[iter_num - j].bin[correcting_block]:
-                        corrected_index = self._binary(iterations[iter_num - j][correcting_block])
-                        if corrected_index is not None:
-                            self.key.invert(corrected_index)
-                            for k in range(0, len(parities)):
-                                corrected_block = self._get_block_containing_index(iterations[k], corrected_index)
-                                parities[k].invert(corrected_block)
+                self.cascade_effect(i, iter_num, iterations, parities, correct_parities)
 
             self.status.save_iteration_info(self.key)
 
