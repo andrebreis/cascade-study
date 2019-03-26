@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 from datasets.generator import generate_dataset, read_keypair
 from implementations.biconf import CascadeBiconf
 from implementations.original import OriginalCascade
-from implementations.tuned import TunedCascade
+from implementations.sugimoto import SugimotoCascade
 from study.status import Status, NO_LOG, FINAL_DATA, ALL_DATA
 from utils.key import Key
 from utils.study_utils import DATASET_SIZE, get_datasets_path, get_results_path
@@ -71,7 +71,7 @@ def run_algorithm(cmd=None):
     algorithms = {
         'original': OriginalCascade,
         'biconf': CascadeBiconf,
-        'tuned': TunedCascade
+        'sugimoto': SugimotoCascade
     }
 
     if not cmd:
@@ -113,7 +113,7 @@ def replicate_run(cmd=None):
     algorithms = {
         'original': OriginalCascade,
         'biconf': CascadeBiconf,
-        'tuned': TunedCascade
+        'sugimoto': SugimotoCascade
     }
 
     if not cmd:

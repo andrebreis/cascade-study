@@ -3,7 +3,7 @@ import math
 from implementations.template import CascadeTemplate
 
 
-class TunedCascade(CascadeTemplate):
+class SugimotoCascade(CascadeTemplate):
 
     def __init__(self, correct_party, key, error_rate, status, seed):
         CascadeTemplate.__init__(self, correct_party, key, error_rate, status, seed)
@@ -23,4 +23,3 @@ class TunedCascade(CascadeTemplate):
     def run_algorithm(self):
         CascadeTemplate.run_algorithm(self)
         self.status.end_run(self.key)
-
