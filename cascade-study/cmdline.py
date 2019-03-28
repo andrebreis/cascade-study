@@ -9,6 +9,7 @@ from datasets.generator import generate_dataset, read_keypair
 from implementations.biconf import CascadeBiconf
 from implementations.original import OriginalCascade
 from implementations.sugimoto import SugimotoCascade
+from study import results
 from study.status import Status, NO_LOG, FINAL_DATA, ALL_DATA
 from utils.key import Key
 from utils.study_utils import DATASET_SIZE, get_datasets_path, get_results_path
@@ -28,6 +29,9 @@ def execute():
 
     parser_list = subparsers.add_parser('replicate_run', help='Replicate other run to validate the results')
     parser_list.set_defaults(func=replicate_run)
+
+    parser_list = subparsers.add_parser('process_results', help='Process results')
+    parser_list.set_defaults(func=process_results)
 
     if len(cmd) == 0:
         parser.print_help()
@@ -141,6 +145,31 @@ def replicate_run(cmd=None):
         delayed(replicate_line)(get_results_path(args.infile), get_results_path(args.out), algorithms[args.algorithm],
                                 i, args.stats_level) for i in range(1, args.num_lines+1)
     )
+
+
+def process_result(infile, outfile):
+    f = open(outfile, 'a')
+    data = results.get_stats(infile)
+    f.write('\n' + ','.join(map(lambda x: str(x), data)))
+    f.close()
+
+
+def process_results(cmd=None):
+    if not cmd:
+        cmd = sys.argv[2:]
+
+    parser = ArgumentParser(description='Process results',
+                            usage='process_results files -o out')
+    parser.add_argument('files', nargs='+')
+    parser.add_argument('-o', '--out', default='res.csv', type=str, help='Name of the file to output results')
+
+    args = parser.parse_args(cmd)
+
+
+
+    # print(args)
+    for file in args.files:
+        process_result(file, args.out)
 
 
 if __name__ == '__main__':
