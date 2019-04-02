@@ -9,7 +9,7 @@ from datasets.generator import generate_dataset, read_keypair
 from implementations.biconf import CascadeBiconf
 from implementations.original import OriginalCascade
 from implementations.sugimoto import SugimotoCascade
-from study import results
+from study import results, graphs
 from study.status import Status, NO_LOG, FINAL_DATA, ALL_DATA
 from utils.key import Key
 from utils.study_utils import DATASET_SIZE, get_datasets_path, get_results_path
@@ -32,6 +32,9 @@ def execute():
 
     parser_list = subparsers.add_parser('process_results', help='Process results')
     parser_list.set_defaults(func=process_results)
+
+    parser_list = subparsers.add_parser('create_graph', help='Create graph')
+    parser_list.set_defaults(func=create_chart)
 
     if len(cmd) == 0:
         parser.print_help()
@@ -59,7 +62,8 @@ def create_dataset(cmd=None):
     args = parser.parse_args(cmd)
     if args.out == '':
         args.out = str(args.key_len) + '-' + str(args.error_rate).replace('.', '') + '.csv'
-    generate_dataset(get_datasets_path(args.out), args.key_len, args.error_rate, args.num_cores, args.size, args.verbose)
+    generate_dataset(get_datasets_path(args.out), args.key_len, args.error_rate, args.num_cores, args.size,
+                     args.verbose)
 
 
 def run_study(stats_file, dataset_file, algorithm, line_num, runs, stats_level):
@@ -143,7 +147,7 @@ def replicate_run(cmd=None):
 
     Parallel(n_jobs=args.num_cores, verbose=args.verbose)(
         delayed(replicate_line)(get_results_path(args.infile), get_results_path(args.out), algorithms[args.algorithm],
-                                i, args.stats_level) for i in range(1, args.num_lines+1)
+                                i, args.stats_level) for i in range(1, args.num_lines + 1)
     )
 
 
@@ -165,11 +169,34 @@ def process_results(cmd=None):
 
     args = parser.parse_args(cmd)
 
-
-
-    # print(args)
+    results.create_file_header(args.out)
     for file in args.files:
         process_result(file, args.out)
+
+
+def create_chart(cmd=None):
+    if not cmd:
+        cmd = sys.argv[2:]
+
+    parser = ArgumentParser(description='Create graph',
+                            usage='create_graph infile xaxis yaxis -vk variance_key [-l line_name restrictions]*')
+    parser.add_argument('infile', type=str, help='Name of the results file to use')
+    parser.add_argument('xaxis', type=str, help='Name of the parameter of the x axis')
+    parser.add_argument('yaxis', type=str, help='Name of the parameter of the y axis')
+    parser.add_argument('-vk', '--variance-key', default=None, help="Name of the parameter for the variance")
+    parser.add_argument('-r', '--restrictions', nargs='+')
+    parser.add_argument('-l', '--line', action='append', nargs='+', metavar=('line_name', 'restrictions'))
+    parser.add_argument('-t', '--title', default='', help="Title of the chart")
+    parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output results')
+
+    args = parser.parse_args(cmd)
+    if args.title == '':
+        args.title = args.yaxis + ' by ' + args.xaxis
+    if args.out == '':
+        args.out = args.title + '.html'
+
+    graphs.create_graph(args.infile, args.xaxis, args.yaxis, args.variance_key, args.title, args.restrictions,
+                        args.line, get_results_path(args.out))
 
 
 if __name__ == '__main__':

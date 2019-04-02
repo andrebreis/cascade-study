@@ -10,7 +10,7 @@ setup(
     author='andrebreis',
     author_email='',
     description='',
-    install_requires=['bitstring', 'joblib'],
+    install_requires=['bitstring', 'joblib', 'plotly'],
     entry_points={
         'console_scripts': [
             'cascade-study=cmdline:execute',
