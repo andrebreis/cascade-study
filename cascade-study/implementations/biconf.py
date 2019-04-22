@@ -37,7 +37,10 @@ class CascadeBiconf(CascadeTemplate):
             correct_parities = self.correct_key.calculate_parities(iteration)
 
             if self.subblock_reuse:
-                self.status.start_iteration({'len': 1-self.subblock_reuse.is_known(iteration[0], correct_parities[0])})
+                row = self.known_subblocks.create_row(iteration[0], correct_parities[0])
+                if not self.known_subblocks.is_known(row):
+                    self.known_subblocks.insert_row(row)
+                    self.status.start_iteration({'len': 1})
             else:
                 self.status.start_iteration({'len': 1})
 

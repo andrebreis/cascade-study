@@ -61,7 +61,7 @@ int row_equals(word* row1, word* row2, int num_cols, int num_words) {
     return memcmp(row1, row2, sizeof(word)* num_words) == 0;
 }
 
-int is_known(row_matrix* matrix, word* row) {
+int _is_known(row_matrix* matrix, word* row) {
     if (matrix->rows == 0)
             return 0;
 
@@ -74,6 +74,7 @@ int is_known(row_matrix* matrix, word* row) {
                 current_row[w] ^= matrix->row[i][w];
             if (row_equals(current_row, row, matrix->cols, matrix->words)) {
                 PyObject_Free(current_row);
+                PyObject_Free(row);
                 return 1;
             }
         }
@@ -110,21 +111,26 @@ word* serialize_list(PyObject* list, int parity, int num_words, int num_cols) {
     return row;
 }
 
-int insert_row(row_matrix* matrix, word* row) {
+int _insert_row(row_matrix* matrix, word* row) {
 
     int first_one = find_first_one(row, matrix->words);
+
+    if(first_one == -1) {
+        PyObject_Free(row);
+        return -1;
+    }
 
     int index = get_row_position(matrix, row, first_one);
 
     if (index > 0 && matrix->first_ones[index-1] == first_one) {
         for(int i = 0; i < matrix->words; i++)
             row[i] ^= matrix->row[index - 1][i];
-        return insert_row(matrix, row);
+        return _insert_row(matrix, row);
     }
     if (index < matrix->rows && matrix->first_ones[index] == first_one) {
         for(int i = 0; i < matrix->words; i++)
             row[i] ^= matrix->row[index][i];
-        return insert_row(matrix, row);
+        return _insert_row(matrix, row);
     }
 
     memmove(&(matrix->row[index+1]), &(matrix->row[index]), sizeof(word*) * (matrix->rows-index));
@@ -136,22 +142,43 @@ int insert_row(row_matrix* matrix, word* row) {
     return 0;
 }
 
-static PyObject* insert_if_unknown(PyObject *self, PyObject *args) {
-
+static PyObject* create_row(PyObject *self, PyObject *args) {
     PyObject* list;
     PyObject* py_handle;
     int parity;
     if(!PyArg_ParseTuple(args, "OOi", &py_handle, &list, &parity))
         return NULL;
-
     row_matrix* matrix = (row_matrix* ) PyLong_AsVoidPtr(py_handle);
     word* row = serialize_list(list, parity, matrix->words, matrix->cols);
+    return PyLong_FromVoidPtr((void*)row);
+}
 
-    if(is_known(matrix, row)) {
-        PyObject_Free(row);
-        return PyLong_FromLong(1);
-    }
-    return PyLong_FromLong(insert_row(matrix, row));
+static PyObject* insert_row(PyObject *self, PyObject *args) {
+
+    PyObject* matrix_handle;
+    PyObject* row_handle;
+    if(!PyArg_ParseTuple(args, "OO", &matrix_handle, &row_handle))
+        return NULL;
+
+    row_matrix* matrix = (row_matrix*) PyLong_AsVoidPtr(matrix_handle);
+    word* row = (word*) PyLong_AsVoidPtr(row_handle);
+
+    _insert_row(matrix, row);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject* is_known(PyObject *self, PyObject *args) {
+
+    PyObject* matrix_handle;
+    PyObject* row_handle;
+    if(!PyArg_ParseTuple(args, "OO", &matrix_handle, &row_handle))
+        return NULL;
+
+    row_matrix* matrix = (row_matrix*) PyLong_AsVoidPtr(matrix_handle);
+    word* row = (word*) PyLong_AsVoidPtr(row_handle);
+
+    return PyLong_FromLong(_is_known(matrix, row));
 }
 
 static PyObject* delete(PyObject *self, PyObject *args) {
@@ -172,7 +199,9 @@ static PyObject* delete(PyObject *self, PyObject *args) {
 
 static PyMethodDef myMethods[] = {
         { "init", init, METH_VARARGS, "Initializes the binary matrix" },
-        { "insert_if_unknown", insert_if_unknown, METH_VARARGS, "Inserts the given row if is is unknown" },
+        { "create_row", create_row, METH_VARARGS, "Creates a row from given input"},
+        { "is_known", is_known, METH_VARARGS, "Checks if a row is known"},
+        { "insert_row", insert_row, METH_VARARGS, "Inserts the given row if is is unknown" },
         { "delete", delete, METH_VARARGS, "Frees the memory for the matrix"},
         { NULL, NULL, 0, NULL }
 };
