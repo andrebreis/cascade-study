@@ -7,6 +7,8 @@ from joblib import Parallel, delayed
 
 from datasets.generator import generate_dataset, read_keypair
 from implementations.biconf import CascadeBiconf
+from implementations.option7 import Option7
+from implementations.option8 import Option8
 from implementations.original import OriginalCascade
 from implementations.sugimoto import SugimotoCascade
 from study import results, graphs
@@ -79,7 +81,9 @@ def run_algorithm(cmd=None):
     algorithms = {
         'original': OriginalCascade,
         'biconf': CascadeBiconf,
-        'sugimoto': SugimotoCascade
+        'sugimoto': SugimotoCascade,
+        'option-7': Option7,
+        'option-8': Option8
     }
 
     if not cmd:
@@ -123,7 +127,9 @@ def replicate_run(cmd=None):
     algorithms = {
         'original': OriginalCascade,
         'biconf': CascadeBiconf,
-        'sugimoto': SugimotoCascade
+        'sugimoto': SugimotoCascade,
+        'option-7': Option7,
+        'option-8': Option8
     }
 
     if not cmd:
