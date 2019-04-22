@@ -5,8 +5,8 @@ from implementations.template import CascadeTemplate
 
 class SugimotoCascade(CascadeTemplate):
 
-    def __init__(self, correct_party, key, error_rate, status, seed):
-        CascadeTemplate.__init__(self, correct_party, key, error_rate, status, seed)
+    def __init__(self, correct_party, key, error_rate, status, seed, subblock_reuse):
+        CascadeTemplate.__init__(self, correct_party, key, error_rate, status, seed, subblock_reuse)
         self.num_iterations = 10
 
     def get_iteration_blocks(self, iter_num):

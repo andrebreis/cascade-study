@@ -11,7 +11,7 @@ from utils.key import Key
 class TestCascadeBiconf(unittest.TestCase):
 
     def test_get_iteration_blocks(self):
-        algorithm = CascadeBiconf(Key('ffffff'), Key('bbbbbb'), 0.21, MagicMock(), 0)
+        algorithm = CascadeBiconf(Key('ffffff'), Key('bbbbbb'), 0.21, MagicMock(), 0, False)
 
         blocks = algorithm.get_iteration_blocks(0)
 
@@ -34,7 +34,7 @@ class TestCascadeBiconf(unittest.TestCase):
         self.ra = CascadeTemplate.run_algorithm
         CascadeTemplate.run_algorithm = MagicMock()
 
-        algorithm = CascadeBiconf(Key('ffffff'), Key('bbbbbb'), 0.21, MagicMock(), 0)
+        algorithm = CascadeBiconf(Key('ffffff'), Key('bbbbbb'), 0.21, MagicMock(), 0, False)
         algorithm.run_biconf = MagicMock()
 
         algorithm.run_algorithm()
@@ -45,6 +45,6 @@ class TestCascadeBiconf(unittest.TestCase):
         CascadeTemplate.run_algorithm = self.ra
 
     def test_run_biconf(self):
-        algorithm = CascadeBiconf(Key('ffffff'), Key('bbbbbb'), 0.21, MagicMock(), 0)
+        algorithm = CascadeBiconf(Key('ffffff'), Key('bbbbbb'), 0.21, MagicMock(), 0, False)
         algorithm.run_biconf()
         self.assertEqual(algorithm.key, algorithm.correct_key)

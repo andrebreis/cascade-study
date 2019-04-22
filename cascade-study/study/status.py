@@ -41,7 +41,10 @@ class Status(object):
 
     def start_iteration(self, channel_use):
         if self.level > NO_LOG:
-            self.channel_uses.append([channel_use['len']])
+            if channel_use['len'] == 0:
+                self.channel_uses.append([])
+            else:
+                self.channel_uses.append([channel_use['len']])
 
     def start_block(self):
         if self.level > NO_LOG:

@@ -10,7 +10,7 @@ from utils.key import Key
 class TestCascadeOriginal(unittest.TestCase):
 
     def test_get_iteration_blocks(self):
-        algorithm = OriginalCascade(Key('ffff'), Key('bbbb'), 0.21, MagicMock(), 0)
+        algorithm = OriginalCascade(Key('ffff'), Key('bbbb'), 0.21, MagicMock(), 0, False)
 
         blocks = algorithm.get_iteration_blocks(0)
         self.assertEqual(blocks, [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]])
