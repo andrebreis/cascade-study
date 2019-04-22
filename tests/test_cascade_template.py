@@ -10,7 +10,7 @@ class TestCascadeTemplate(unittest.TestCase):
 
     class CascadeTemplateWrapper(CascadeTemplate):
         def __init__(self, correct_key, key, error_rate, status, seed):
-            CascadeTemplate.__init__(self, correct_key, key, error_rate, status, seed)
+            CascadeTemplate.__init__(self, correct_key, key, error_rate, status, seed, False)
             self.num_iterations = 3
             self.block_size = 8
 
@@ -24,11 +24,11 @@ class TestCascadeTemplate(unittest.TestCase):
 
     def test_binary(self):
         random.seed(1337)
-        obj = CascadeTemplate(Key('f'), Key('b'), 0.25, MagicMock(), 0)
+        obj = CascadeTemplate(Key('f'), Key('b'), 0.25, MagicMock(), 0, False)
         error_index = obj._binary(range(0, len(obj.key)))
         self.assertEqual(error_index, 1)
 
-        obj = CascadeTemplate(Key('3e'), Key('3f'), 0.17, MagicMock(), 0)
+        obj = CascadeTemplate(Key('3e'), Key('3f'), 0.17, MagicMock(), 0, False)
         error_index = obj._binary(range(0, len(obj.key)))
         self.assertEqual(error_index, 7)
 

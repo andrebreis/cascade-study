@@ -1,16 +1,21 @@
 import math
 import random
 
+from study.known_subblocks import KnownSubblocks
+
 
 class CascadeTemplate(object):
 
-    def __init__(self, correct_key, key, error_rate, status, seed):
+    def __init__(self, correct_key, key, error_rate, status, seed, subblock_reuse):
         self.correct_key = correct_key
         self.key = key
         self.error_rate = error_rate
         self.num_iterations = 0
         self.status = status
         self.seed = seed
+        self.subblock_reuse = subblock_reuse
+        if self.subblock_reuse:
+            self.known_subblocks = KnownSubblocks(len(correct_key))
 
     def estimate_error(self):
         return self.key.hamming_distance(self.correct_key) / len(self.key)
@@ -64,7 +69,12 @@ class CascadeTemplate(object):
             parities.append(self.key.calculate_parities(iterations[iter_num]))
             correct_parities.append(self.correct_key.calculate_parities(iterations[iter_num]))
 
-            self.status.start_iteration({'len': len(correct_parities[iter_num])})
+            reused_blocks = 0
+            if self.subblock_reuse:
+                for i in range(0, len(iterations[iter_num])):
+                    reused_blocks += self.known_subblocks.is_known(iterations[iter_num][i],
+                                                                   correct_parities[iter_num][i])
+            self.status.start_iteration({'len': len(correct_parities[iter_num]) - reused_blocks})
 
             for i in range(0, len(correct_parities[iter_num])):
                 self.status.start_block()
@@ -72,7 +82,7 @@ class CascadeTemplate(object):
 
             self.status.save_iteration_info(self.key)
 
-    def _binary(self, block, iteration_num=0):
+    def _binary(self, block):
         """
         Finds the index of an odd error in the given block
         :param block list indexes of the bits of key forming the block to perform the protocol
@@ -80,17 +90,22 @@ class CascadeTemplate(object):
         """
         first_half_size = math.ceil(len(block) / 2)
         correct_first_half_par = self.correct_key.calculate_block_parity(block[:first_half_size])
-        self.status.add_channel_use({'len': 1})
-        iteration_num += 1
+
+        if self.subblock_reuse:
+            if not self.known_subblocks.is_known(block[:first_half_size], correct_first_half_par):
+                self.status.add_channel_use({'len': 1})
+        else:
+            self.status.add_channel_use({'len': 1})
+
         first_half_par = self.key.calculate_block_parity(block[:first_half_size])
 
         if first_half_par != correct_first_half_par:
             if first_half_size == 1:
                 return block[0]
             else:
-                return self._binary(block[:first_half_size], iteration_num)
+                return self._binary(block[:first_half_size])
         else:
             if len(block) - first_half_size == 1:
                 return block[-1]
             else:
-                return self._binary(block[first_half_size:], iteration_num)
+                return self._binary(block[first_half_size:])

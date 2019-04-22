@@ -66,12 +66,12 @@ def create_dataset(cmd=None):
                      args.verbose)
 
 
-def run_study(stats_file, dataset_file, algorithm, line_num, runs, stats_level):
+def run_study(stats_file, dataset_file, algorithm, line_num, runs, stats_level, block_reuse):
     correct_key, key, error_rate = read_keypair(get_datasets_path(dataset_file), line_num)
     for _ in range(0, runs):
         seed = str(uuid.uuid4())
         stats = Status(stats_file, dataset_file, line_num, seed, stats_level)
-        run = algorithm(Key(correct_key.hex), Key(key.hex), error_rate, stats, seed)
+        run = algorithm(Key(correct_key.hex), Key(key.hex), error_rate, stats, seed, block_reuse)
         run.run_algorithm()
 
 
@@ -89,7 +89,7 @@ def run_algorithm(cmd=None):
 
     parser = ArgumentParser(description='Run algorithm',
                             usage='run_algorithm algorithm dataset -o out -r runs -nc num_cores -nl num_lines ' +
-                                  '-sl stats_level')
+                                  '-sl stats_level -br')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('dataset', type=str, help='Name of the file containing the dataset')
     parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output results')
@@ -99,6 +99,8 @@ def run_algorithm(cmd=None):
     parser.add_argument('-nl', '--num-lines', type=int, default=DATASET_SIZE, help='Number of lines to process')
     parser.add_argument('-sl', '--stats-level', type=int, default=FINAL_DATA, choices=[NO_LOG, FINAL_DATA, ALL_DATA],
                         help='Stats level: 1 - NO LOG, 2 - FINAL DATA, 3 - ALL DATA')
+    parser.add_argument('-br', '--block-reuse', action='store_const', const=True, default=False,
+                        help='Run algorithm with subblock reuse optimization')
     parser.add_argument('-v', '--verbose', action='store_const', const=50, default=15)
 
     args = parser.parse_args(cmd)
@@ -106,14 +108,14 @@ def run_algorithm(cmd=None):
         args.out = args.algorithm + '/' + args.algorithm + '-' + args.dataset.replace('.csv', '.res.csv')
     Parallel(n_jobs=args.num_cores, verbose=args.verbose)(
         delayed(run_study)(get_results_path(args.out), args.dataset, algorithms[args.algorithm], i, args.runs,
-                           args.stats_level) for i in
+                           args.stats_level, args.block_reuse) for i in
         range(0, args.num_lines))
 
 
-def replicate_line(infile, outfile, algorithm, line_num, stats_level):
+def replicate_line(infile, outfile, algorithm, line_num, stats_level, block_reuse):
     stats = Status.from_line(outfile, infile, line_num, stats_level)
     correct_key, key, error_rate = read_keypair(get_datasets_path(stats.dataset_file), stats.dataset_line)
-    run = algorithm(correct_key, key, error_rate, stats, stats.seed)
+    run = algorithm(correct_key, key, error_rate, stats, stats.seed, block_reuse)
     run.run_algorithm()
 
 
@@ -130,7 +132,7 @@ def replicate_run(cmd=None):
     num_cores = multiprocessing.cpu_count()
 
     parser = ArgumentParser(description='Replicate run',
-                            usage='replicate_run algorithm infile -o out -nc num_cores -nl num_lines')
+                            usage='replicate_run algorithm infile -o out -nc num_cores -nl num_lines -br')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('infile', type=str, help='Name of the results file to validate')
     parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output results')
@@ -139,6 +141,8 @@ def replicate_run(cmd=None):
     parser.add_argument('-nl', '--num-lines', type=int, default=DATASET_SIZE, help='Number of lines to process')
     parser.add_argument('-sl', '--stats-level', type=int, default=FINAL_DATA, choices=[NO_LOG, FINAL_DATA, ALL_DATA],
                         help='Stats level: 1 - NO LOG, 2 - FINAL DATA, 3 - ALL DATA')
+    parser.add_argument('-br', '--block-reuse', action='store_const', const=True, default=False,
+                        help='Run algorithm with subblock reuse optimization')
     parser.add_argument('-v', '--verbose', action='store_const', const=50, default=15)
 
     args = parser.parse_args(cmd)
@@ -147,7 +151,7 @@ def replicate_run(cmd=None):
 
     Parallel(n_jobs=args.num_cores, verbose=args.verbose)(
         delayed(replicate_line)(get_results_path(args.infile), get_results_path(args.out), algorithms[args.algorithm],
-                                i, args.stats_level) for i in range(1, args.num_lines + 1)
+                                i, args.stats_level, args.block_reuse) for i in range(1, args.num_lines+1)
     )
 
 
