@@ -1,4 +1,5 @@
 import math
+import random
 
 from implementations.template import CascadeTemplate
 
@@ -11,7 +12,7 @@ class CascadeBiconf(CascadeTemplate):
         self.biconf_iterations = 10
 
     def get_iteration_blocks(self, iter_num):
-        block_size = math.ceil(0.92 / self.error_rate)
+        block_size = math.floor(0.92 / self.error_rate)
         if iter_num == 0:
             blocks = []
             for i in range(0, len(self.key), block_size):  # create list of block indexes [[0,1,2,3],[4,5,6,7]]
@@ -20,8 +21,11 @@ class CascadeBiconf(CascadeTemplate):
         elif iter_num == 1:
             return self.shuffle_blocks(block_size * 3)
 
-        block_size = math.ceil(len(self.key)/2)
-        return self.shuffle_blocks(block_size)
+        blocks = [[], []]
+        for i in range(0, len(self.key)):
+            blocks[random.randint(0, 1)].append(i)
+
+        return blocks
 
     def run_biconf(self):
         max_iter = 0
@@ -32,19 +36,19 @@ class CascadeBiconf(CascadeTemplate):
             parities = self.key.calculate_parities(iteration)
             correct_parities = self.correct_key.calculate_parities(iteration)
 
-            reused_blocks = 0
             if self.subblock_reuse:
-                for i in range(0, len(iteration)):
-                    reused_blocks += self.known_subblocks.is_known(iteration[i], correct_parities[i])
-            self.status.start_iteration({'len': len(correct_parities) - reused_blocks})
+                self.status.start_iteration({'len': 1-self.subblock_reuse.is_known(iteration[0], correct_parities[0])})
+            else:
+                self.status.start_iteration({'len': 1})
 
             if parities[0] != correct_parities[0]:
                 num_successive_iter_no_errors = 0
                 for i in range(0, len(iteration)):
-                    self.status.start_block()
-                    correcting_index = self._binary(iteration[i])
-                    if correcting_index is not None:
-                        self.key.invert(correcting_index)
+                    if parities[i] != correct_parities[i]:
+                        self.status.start_block()
+                        correcting_index = self._binary(iteration[i])
+                        if correcting_index is not None:
+                            self.key.invert(correcting_index)
             else:
                 num_successive_iter_no_errors += 1
                 if num_successive_iter_no_errors > max_iter:
