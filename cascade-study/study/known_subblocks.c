@@ -103,9 +103,9 @@ word* serialize_list(PyObject* list, int parity, int num_words, int num_cols) {
     word* row = PyObject_Calloc(sizeof(word), num_words);
     for(int i = 0; i < PyList_Size(list); i++) {
         int index = PyLong_AsLong(PyList_GetItem(list, (Py_ssize_t)i));
-        row[index/WORD_BITS] |= (1 << (index % WORD_BITS));
+        row[index/WORD_BITS] |= ((word)1 << (index % WORD_BITS));
     }
-    row[num_words-1] |= (parity << ((num_cols-1) % WORD_BITS));
+    row[num_words-1] |= ((word)parity << ((num_cols-1) % WORD_BITS));
 
     return row;
 }
