@@ -35,7 +35,7 @@ static PyObject* init(PyObject* self, PyObject* args) {
 
     matrix->row = (word**) PyObject_Malloc(sizeof(word*) * INIT_NUM_ROWS);
 
-    matrix->first_ones = (int*) PyObject_Calloc(INIT_NUM_ROWS, sizeof(int));
+    matrix->first_ones = (int*) calloc(INIT_NUM_ROWS, sizeof(int));
 
     return PyLong_FromVoidPtr((void*)matrix);
 
@@ -65,7 +65,7 @@ int _is_known(row_matrix* matrix, word* row) {
     if (matrix->rows == 0)
             return 0;
 
-    word* current_row = (word*) PyObject_Calloc(matrix->words, sizeof(word));
+    word* current_row = (word*) calloc(matrix->words, sizeof(word));
     for(int i = 0; i < matrix->rows; i++) {
         int first_one = matrix->first_ones[i];
         if (row_get(row, first_one) != row_get(current_row, first_one)) {
@@ -101,7 +101,7 @@ int get_row_position(row_matrix* matrix, word* row, int first_one) {
 }
 
 word* serialize_list(PyObject* list, int parity, int num_words, int num_cols) {
-    word* row = PyObject_Calloc(sizeof(word), num_words);
+    word* row = calloc(sizeof(word), num_words);
     for(int i = 0; i < PyList_Size(list); i++) {
         int index = PyLong_AsLong(PyList_GetItem(list, (Py_ssize_t)i));
         row[index/WORD_BITS] |= ((word)1 << (index % WORD_BITS));
