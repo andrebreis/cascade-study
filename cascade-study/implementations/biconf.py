@@ -6,8 +6,8 @@ from implementations.template import CascadeTemplate
 
 class CascadeBiconf(CascadeTemplate):
 
-    def __init__(self, correct_key, key, error_rate, status, seed, subblock_reuse):
-        CascadeTemplate.__init__(self, correct_key, key, error_rate, status, seed, subblock_reuse)
+    def __init__(self, correct_key, key, error_rate, status, seed, block_parity_inference):
+        CascadeTemplate.__init__(self, correct_key, key, error_rate, status, seed, block_parity_inference)
         self.num_iterations = 2
         self.biconf_iterations = 10
 
@@ -36,10 +36,10 @@ class CascadeBiconf(CascadeTemplate):
             parities = self.key.calculate_parities(iteration)
             correct_parities = self.correct_key.calculate_parities(iteration)
 
-            if self.subblock_reuse:
-                row = self.known_subblocks.create_row(iteration[0], correct_parities[0])
-                if not self.known_subblocks.is_known(row):
-                    self.known_subblocks.insert_row(row)
+            if self.block_parity_inference:
+                row = self.inferred_blocks.create_row(iteration[0], correct_parities[0])
+                if not self.inferred_blocks.can_be_inferred(row):
+                    self.inferred_blocks.insert_row(row)
                     self.status.start_iteration({'len': 1})
             else:
                 self.status.start_iteration({'len': 1})

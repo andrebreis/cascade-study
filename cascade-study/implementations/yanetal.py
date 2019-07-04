@@ -3,10 +3,10 @@ import math
 from implementations.template import CascadeTemplate
 
 
-class SugimotoCascade(CascadeTemplate):
+class YanetalCascade(CascadeTemplate):
 
-    def __init__(self, correct_party, key, error_rate, status, seed, subblock_reuse):
-        CascadeTemplate.__init__(self, correct_party, key, error_rate, status, seed, subblock_reuse)
+    def __init__(self, correct_party, key, error_rate, status, seed, block_parity_inference):
+        CascadeTemplate.__init__(self, correct_party, key, error_rate, status, seed, block_parity_inference)
         self.num_iterations = 10
 
     def get_iteration_blocks(self, iter_num):

@@ -1,21 +1,21 @@
 import math
 import random
 
-from study.known_subblocks import KnownSubblocks
+from study.block_parity_inference import BlockParityInference
 
 
 class CascadeTemplate(object):
 
-    def __init__(self, correct_key, key, error_rate, status, seed, subblock_reuse):
+    def __init__(self, correct_key, key, error_rate, status, seed, block_parity_inference):
         self.correct_key = correct_key
         self.key = key
         self.error_rate = error_rate
         self.num_iterations = 0
         self.status = status
         self.seed = seed
-        self.subblock_reuse = subblock_reuse
-        if self.subblock_reuse:
-            self.known_subblocks = KnownSubblocks(len(correct_key))
+        self.block_parity_inference = block_parity_inference
+        if self.block_parity_inference:
+            self.inferred_blocks = BlockParityInference(len(correct_key))
 
     def estimate_error(self):
         return self.key.hamming_distance(self.correct_key) / len(self.key)
@@ -71,13 +71,13 @@ class CascadeTemplate(object):
 
             unknown_blocks = []
             not_first_iteration = (iter_num > 0)  # Can always skip the last block parity after the first iteration
-            if self.subblock_reuse:
+            if self.block_parity_inference:
                 for i in range(0, len(iterations[iter_num]) - not_first_iteration):
-                    row = self.known_subblocks.create_row(iterations[iter_num][i], correct_parities[iter_num][i])
-                    if not self.known_subblocks.is_known(row):
+                    row = self.inferred_blocks.create_row(iterations[iter_num][i], correct_parities[iter_num][i])
+                    if not self.inferred_blocks.can_be_inferred(row):
                         unknown_blocks.append(row)
                 for i in range(0, len(unknown_blocks)):
-                    self.known_subblocks.insert_row(unknown_blocks[i])
+                    self.inferred_blocks.insert_row(unknown_blocks[i])
                 self.status.start_iteration({'len': len(unknown_blocks)})
             else:
                 self.status.start_iteration({'len': len(correct_parities[iter_num]) - not_first_iteration})
@@ -97,10 +97,10 @@ class CascadeTemplate(object):
         first_half_size = math.ceil(len(block) / 2)
         correct_first_half_par = self.correct_key.calculate_block_parity(block[:first_half_size])
 
-        if self.subblock_reuse:
-            row = self.known_subblocks.create_row(block[:first_half_size], correct_first_half_par)
-            if not self.known_subblocks.is_known(row):
-                self.known_subblocks.insert_row(row)
+        if self.block_parity_inference:
+            row = self.inferred_blocks.create_row(block[:first_half_size], correct_first_half_par)
+            if not self.inferred_blocks.can_be_inferred(row):
+                self.inferred_blocks.insert_row(row)
                 self.status.add_channel_use({'len': 1})
         else:
             self.status.add_channel_use({'len': 1})

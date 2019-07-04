@@ -10,8 +10,8 @@ from implementations.biconf import CascadeBiconf
 from implementations.option7 import Option7
 from implementations.option8 import Option8
 from implementations.original import OriginalCascade
-from implementations.sugimoto import SugimotoCascade
-from study import results, graphs
+from implementations.yanetal import YanetalCascade
+from study import results, charts
 from study.status import Status, NO_LOG, FINAL_DATA, ALL_DATA
 from utils.key import Key
 from utils.study_utils import DATASET_SIZE, get_datasets_path, get_results_path
@@ -81,9 +81,9 @@ def run_algorithm(cmd=None):
     algorithms = {
         'original': OriginalCascade,
         'biconf': CascadeBiconf,
-        'sugimoto': SugimotoCascade,
-        'option-7': Option7,
-        'option-8': Option8
+        'yanetal': YanetalCascade,
+        'option7': Option7,
+        'option8': Option8
     }
 
     if not cmd:
@@ -93,7 +93,7 @@ def run_algorithm(cmd=None):
 
     parser = ArgumentParser(description='Run algorithm',
                             usage='run_algorithm algorithm dataset -o out -r runs -nc num_cores -nl num_lines ' +
-                                  '-sl stats_level -br')
+                                  '-sl stats_level -bi')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('dataset', type=str, help='Name of the file containing the dataset')
     parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output results')
@@ -103,8 +103,8 @@ def run_algorithm(cmd=None):
     parser.add_argument('-nl', '--num-lines', type=int, default=DATASET_SIZE, help='Number of lines to process')
     parser.add_argument('-sl', '--stats-level', type=int, default=FINAL_DATA, choices=[NO_LOG, FINAL_DATA, ALL_DATA],
                         help='Stats level: 1 - NO LOG, 2 - FINAL DATA, 3 - ALL DATA')
-    parser.add_argument('-br', '--block-reuse', action='store_const', const=True, default=False,
-                        help='Run algorithm with subblock reuse optimization')
+    parser.add_argument('-bi', '--block-inference', action='store_const', const=True, default=False,
+                        help='Run algorithm with block parity inference optimization')
     parser.add_argument('-v', '--verbose', action='store_const', const=50, default=15)
 
     args = parser.parse_args(cmd)
@@ -112,7 +112,7 @@ def run_algorithm(cmd=None):
         args.out = args.algorithm + '/' + args.algorithm + '-' + args.dataset.replace('.csv', '.res.csv')
     Parallel(n_jobs=args.num_cores, verbose=args.verbose)(
         delayed(run_study)(get_results_path(args.out), args.dataset, algorithms[args.algorithm], i, args.runs,
-                           args.stats_level, args.block_reuse) for i in
+                           args.stats_level, args.block_inference) for i in
         range(0, args.num_lines))
 
 
@@ -127,9 +127,9 @@ def replicate_run(cmd=None):
     algorithms = {
         'original': OriginalCascade,
         'biconf': CascadeBiconf,
-        'sugimoto': SugimotoCascade,
-        'option-7': Option7,
-        'option-8': Option8
+        'yanetal': YanetalCascade,
+        'option7': Option7,
+        'option8': Option8
     }
 
     if not cmd:
@@ -138,7 +138,7 @@ def replicate_run(cmd=None):
     num_cores = multiprocessing.cpu_count()
 
     parser = ArgumentParser(description='Replicate run',
-                            usage='replicate_run algorithm infile -o out -nc num_cores -nl num_lines -br')
+                            usage='replicate_run algorithm infile -o out -nc num_cores -nl num_lines -bi')
     parser.add_argument('algorithm', type=str, choices=algorithms.keys(), help='Name of the algorithm to run')
     parser.add_argument('infile', type=str, help='Name of the results file to validate')
     parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output results')
@@ -147,8 +147,8 @@ def replicate_run(cmd=None):
     parser.add_argument('-nl', '--num-lines', type=int, default=DATASET_SIZE, help='Number of lines to process')
     parser.add_argument('-sl', '--stats-level', type=int, default=FINAL_DATA, choices=[NO_LOG, FINAL_DATA, ALL_DATA],
                         help='Stats level: 1 - NO LOG, 2 - FINAL DATA, 3 - ALL DATA')
-    parser.add_argument('-br', '--block-reuse', action='store_const', const=True, default=False,
-                        help='Run algorithm with subblock reuse optimization')
+    parser.add_argument('-bi', '--block-inference', action='store_const', const=True, default=False,
+                        help='Run algorithm with block parity inference optimization')
     parser.add_argument('-v', '--verbose', action='store_const', const=50, default=15)
 
     args = parser.parse_args(cmd)
@@ -157,7 +157,7 @@ def replicate_run(cmd=None):
 
     Parallel(n_jobs=args.num_cores, verbose=args.verbose)(
         delayed(replicate_line)(get_results_path(args.infile), get_results_path(args.out), algorithms[args.algorithm],
-                                i, args.stats_level, args.block_reuse) for i in range(1, args.num_lines+1)
+                                i, args.stats_level, args.block_inference) for i in range(1, args.num_lines+1)
     )
 
 
@@ -188,14 +188,19 @@ def create_chart(cmd=None):
     if not cmd:
         cmd = sys.argv[2:]
 
-    parser = ArgumentParser(description='Create graph',
+    parser = ArgumentParser(description='Create chart',
                             usage='create_graph infile xaxis yaxis -vk variance_key [-l line_name restrictions]*')
     parser.add_argument('infile', type=str, help='Name of the results file to use')
     parser.add_argument('xaxis', type=str, help='Name of the parameter of the x axis')
     parser.add_argument('yaxis', type=str, help='Name of the parameter of the y axis')
     parser.add_argument('-vk', '--variance-key', default=None, help="Name of the parameter for the variance")
     parser.add_argument('-r', '--restrictions', nargs='+')
-    parser.add_argument('-l', '--line', action='append', nargs='+', metavar=('line_name', 'restrictions'))
+    parser.add_argument('-l', '--lines', action='append', nargs='+', metavar=('line_name', 'restrictions'))
+    parser.add_argument('-xt', '--xtick', default=None, help="Tick distance of the x axis")
+    parser.add_argument('-yt', '--ytick', default=None, help="Tick distance of the y axis")
+    parser.add_argument('-xf', '--xformat', default='.f', help="Tick format of the x axis")
+    parser.add_argument('-yf', '--yformat', default='.f', help="Tick format of the y axis")
+    parser.add_argument('-yr', '--yrange', default=None, nargs='+', metavar=('min', 'max'), help="Range of the y axis")
     parser.add_argument('-t', '--title', default='', help="Title of the chart")
     parser.add_argument('-o', '--out', default='', type=str, help='Name of the file to output results')
 
@@ -203,10 +208,22 @@ def create_chart(cmd=None):
     if args.title == '':
         args.title = args.yaxis + ' by ' + args.xaxis
     if args.out == '':
-        args.out = args.title + '.html'
+        args.out = args.title + '.png'
 
-    graphs.create_graph(args.infile, args.xaxis, args.yaxis, args.variance_key, args.title, args.restrictions,
-                        args.line, get_results_path(args.out))
+    graph_options = {
+        'variance_key': args.variance_key,
+        'title': args.title,
+        'restrictions': args.restrictions,
+        'lines': args.line,
+        'xtick': args.xtick,
+        'ytick': args.ytick,
+        'xformat': args.xformat,
+        'yformat': args.yformat,
+        'xrange': args.xrange,
+        'yrange': args.yrange,
+    }
+
+    charts.create_chart(args.infile, args.xaxis, args.yaxis, graph_options, get_results_path(args.out))
 
 
 if __name__ == '__main__':

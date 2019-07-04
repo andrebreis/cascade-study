@@ -1,12 +1,15 @@
 import math
 
+from datasets.generator import _generate_keypair
 from implementations.template import CascadeTemplate
+from study.status import Status
+from utils.key import Key
 
 
 class Option8(CascadeTemplate):
 
-    def __init__(self, correct_party, key, error_rate, status, seed, subblock_reuse):
-        CascadeTemplate.__init__(self, correct_party, key, error_rate, status, seed, subblock_reuse)
+    def __init__(self, correct_party, key, error_rate, status, seed, block_parity_inference):
+        CascadeTemplate.__init__(self, correct_party, key, error_rate, status, seed, block_parity_inference)
         self.num_iterations = 14
 
     def get_iteration_blocks(self, iter_num):
@@ -28,3 +31,7 @@ class Option8(CascadeTemplate):
         CascadeTemplate.run_algorithm(self)
         self.status.end_run(self.key)
 
+if __name__ == '__main__':
+    c_key, key = _generate_keypair(16384, 0.01)
+    run = Option8(Key(c_key.hex), Key(key.hex), 0.01, Status('asd', 1, 'asd', 1000, 2), 1000, False)
+    run.run_algorithm()
