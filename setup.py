@@ -1,6 +1,6 @@
 from setuptools import setup, Extension
 
-known_subblocks = Extension('known', sources=['cascade-study/study/known_subblocks.c'])
+block_parity_inference = Extension('inference', sources=['cascade-study/study/block_parity_inference.c'])
 
 setup(
     name='cascade-study',
@@ -13,7 +13,7 @@ setup(
     author_email='',
     description='',
     install_requires=['bitstring', 'joblib', 'plotly'],
-    ext_modules=[known_subblocks],
+    ext_modules=[block_parity_inference],
     entry_points={
         'console_scripts': [
             'cascade-study=cmdline:execute',

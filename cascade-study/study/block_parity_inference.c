@@ -168,7 +168,7 @@ static PyObject* insert_row(PyObject *self, PyObject *args) {
     return Py_None;
 }
 
-static PyObject* is_known(PyObject *self, PyObject *args) {
+static PyObject* can_be_inferred(PyObject *self, PyObject *args) {
 
     PyObject* matrix_handle;
     PyObject* row_handle;
@@ -200,23 +200,23 @@ static PyObject* delete(PyObject *self, PyObject *args) {
 static PyMethodDef myMethods[] = {
         { "init", init, METH_VARARGS, "Initializes the binary matrix" },
         { "create_row", create_row, METH_VARARGS, "Creates a row from given input"},
-        { "is_known", is_known, METH_VARARGS, "Checks if a row is known"},
-        { "insert_row", insert_row, METH_VARARGS, "Inserts the given row if is is unknown" },
+        { "can_be_inferred", can_be_inferred, METH_VARARGS, "Checks if a row can be inferred"},
+        { "insert_row", insert_row, METH_VARARGS, "Inserts the given row if cannot be inferred" },
         { "delete", delete, METH_VARARGS, "Frees the memory for the matrix"},
         { NULL, NULL, 0, NULL }
 };
 
 // Our Module Definition struct
-static struct PyModuleDef known = {
+static struct PyModuleDef inference = {
         PyModuleDef_HEAD_INIT,
-        "known",
-        "known",
+        "inference",
+        "inference",
         -1,
         myMethods
 };
 
 // Initializes our module using our above struct
-PyMODINIT_FUNC PyInit_known(void)
+PyMODINIT_FUNC PyInit_inference(void)
 {
-    return PyModule_Create(&known);
+    return PyModule_Create(&inference);
 }
