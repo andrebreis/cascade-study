@@ -76,7 +76,7 @@ To process the files with results from `run_algorithm`, the following command is
 cascade-study process_results <results file>* [-o <output_file>]
 ```
 
-This will process all input files into a file with the average and variance for each field. To extract the name of the algorithm and key length, it expects the files to be named: <algorithm>-<key length>-[irrelevant].
+This will process all input files into a file with the average and variance for each field. To extract the name of the algorithm and key length, it expects the files to be named: `<algorithm>`-`<key length>`-[irrelevant].
   
  ### Create chart
  
@@ -99,6 +99,8 @@ Can be used multiple times to create multiple lines.
 -yt <tick distance>               Set the distance between ticks for the y axis
 -xr <min> <max>                   Set the range for the x axis
 -yr <min> <max>                   Set the range for the y axis
+-xf <format>                      Set the format for the ticks on the x axis (e.g. .4f)
+-yf <format>                      Set the format for the ticks on the y axis (e.g. .4f)
 -t --title <title>                Set the title of the chart.
 -o --out <output file>            Set the output file name. Defaults to the title if has no input
 ```
