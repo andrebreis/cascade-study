@@ -2,11 +2,12 @@ import math
 import random
 
 from study.block_parity_inference import BlockParityInference
+from study.subblock_reuse import KnownSubblocks
 
 
 class CascadeTemplate(object):
 
-    def __init__(self, correct_key, key, error_rate, status, seed, block_parity_inference):
+    def __init__(self, correct_key, key, error_rate, status, seed, block_parity_inference, subblock_reuse=True):
         self.correct_key = correct_key
         self.key = key
         self.error_rate = error_rate
@@ -14,8 +15,11 @@ class CascadeTemplate(object):
         self.status = status
         self.seed = seed
         self.block_parity_inference = block_parity_inference
+        self.subblock_reuse = None
         if self.block_parity_inference:
             self.inferred_blocks = BlockParityInference(len(correct_key))
+        if subblock_reuse:
+            self.subblock_reuse = KnownSubblocks()
 
     def estimate_error(self):
         return self.key.hamming_distance(self.correct_key) / len(self.key)
@@ -41,20 +45,26 @@ class CascadeTemplate(object):
                 return i
 
     def cascade_effect(self, current_block, current_iter, iterations, parities, correct_parities):
-        errors_to_process = [(current_iter, current_block)]
+        errors_to_process = [(current_iter, len(iterations[current_iter][current_block]), current_block,
+                              iterations[current_iter][current_block])]
 
         while errors_to_process:
-            (iteration, processing_block) = errors_to_process.pop()
-            if parities[iteration][processing_block] != correct_parities[iteration][processing_block]:
-                correcting_index = self._binary(iterations[iteration][processing_block])
+            (iteration, _, processing_block_idx, processing_block) = errors_to_process.pop()
+            if parities[iteration][processing_block_idx] != correct_parities[iteration][processing_block_idx]:
+                correcting_index = self._binary(processing_block, iteration, processing_block_idx)
                 self.key.invert(correcting_index)
-                parities[iteration].invert(processing_block)
+                parities[iteration].invert(processing_block_idx)
                 for i in range(0, current_iter + 1):
                     if i != iteration:
                         block_to_process = self._get_block_containing_index(iterations[i], correcting_index)
                         parities[i].invert(block_to_process)
-                        errors_to_process.append((i, block_to_process))
-                errors_to_process.sort(key=lambda x: x[0])
+                        errors_to_process.append((i, len(iterations[i][block_to_process]), block_to_process,
+                                                  iterations[i][block_to_process]))
+                if self.subblock_reuse:
+                    new_blocks = self.subblock_reuse.get_blocks_with_index(correcting_index)
+                    for block in new_blocks:
+                        errors_to_process.append((block[0], len(block[2]), block[1], block[2]))
+                errors_to_process.sort(key=lambda x: x[1])
 
     def run_algorithm(self):
         iterations = []
@@ -88,7 +98,7 @@ class CascadeTemplate(object):
 
             self.status.save_iteration_info(self.key)
 
-    def _binary(self, block):
+    def _binary(self, block, iteration, block_number):
         """
         Finds the index of an odd error in the given block
         :param block list indexes of the bits of key forming the block to perform the protocol
@@ -105,15 +115,21 @@ class CascadeTemplate(object):
         else:
             self.status.add_channel_use({'len': 1})
 
+        if self.subblock_reuse:
+            if first_half_size != 1:
+                self.subblock_reuse.add_block(iteration, block_number, block[:first_half_size])
+            if len(block) - first_half_size != 1:
+                self.subblock_reuse.add_block(iteration, block_number, block[first_half_size:])
+
         first_half_par = self.key.calculate_block_parity(block[:first_half_size])
 
         if first_half_par != correct_first_half_par:
             if first_half_size == 1:
                 return block[0]
             else:
-                return self._binary(block[:first_half_size])
+                return self._binary(block[:first_half_size], iteration, block_number)
         else:
             if len(block) - first_half_size == 1:
                 return block[-1]
             else:
-                return self._binary(block[first_half_size:])
+                return self._binary(block[first_half_size:], iteration, block_number)
