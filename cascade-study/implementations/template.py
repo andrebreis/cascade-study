@@ -61,7 +61,7 @@ class CascadeTemplate(object):
                         errors_to_process.append((i, len(iterations[i][block_to_process]), block_to_process,
                                                   iterations[i][block_to_process]))
                 if self.subblock_reuse:
-                    new_blocks = self.subblock_reuse.get_blocks_with_index(correcting_index)
+                    new_blocks = self.subblock_reuse.get_blocks_with_index(correcting_index, iteration)
                     for block in new_blocks:
                         errors_to_process.append((block[0], len(block[2]), block[1], block[2]))
                 errors_to_process.sort(key=lambda x: x[1])
